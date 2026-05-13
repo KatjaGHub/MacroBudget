@@ -104,11 +104,11 @@ export default function CreateIngredientPage() {
                                     type="button"
                                     onClick={() => setUnit(option as "g" | "pcs")}
                                     className={`rounded-2xl border p-4 text-center text-lg font-black transition ${unit === option
-                                            ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-                                            : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                                        ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                                        : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                                         }`}
                                 >
-                                    {option === "g" ? "grams" : "pieces"}
+                                    {option === "g" ? "Grams" : "Pieces"}
                                 </button>
                             ))}
                         </div>
@@ -117,7 +117,7 @@ export default function CreateIngredientPage() {
                     <div className="mt-8 grid gap-4 md:grid-cols-2">
                         <div>
                             <label className="text-sm font-bold uppercase text-orange-400">
-                                Calories / 100g
+                                Calories / {unit === "g" ? "100g" : "piece"}
                             </label>
 
                             <input
@@ -222,7 +222,7 @@ export default function CreateIngredientPage() {
                             </p>
 
                             <p className="mt-1 text-2xl font-black text-rose-950">
-                                {calories || 0} kcal
+                                {calories || 0} kcal / {unit === "g" ? "100g" : "piece"}
                             </p>
                         </div>
 
@@ -232,7 +232,7 @@ export default function CreateIngredientPage() {
                             </p>
 
                             <p className="mt-1 text-2xl font-black text-rose-950">
-                                {protein || 0} g
+                                {protein || 0} g / {unit === "g" ? "100g" : "piece"}
                             </p>
                         </div>
 
