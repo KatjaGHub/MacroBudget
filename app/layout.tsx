@@ -48,6 +48,12 @@ export default function RootLayout({
                 <a className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/meal-plan">
                   Meal Plan
                 </a>
+                <a
+                  className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100"
+                  href="/shopping-list"
+                >
+                  Shopping List
+                </a>
               </div>
             </div>
           </nav>
