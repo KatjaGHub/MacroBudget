@@ -3,39 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
-
-const ingredientDatabase = [
-    {
-        name: "Chicken breast",
-        caloriesPer100g: 110,
-        proteinPer100g: 23,
-        costPer100g: 0.85,
-    },
-    {
-        name: "Rice",
-        caloriesPer100g: 130,
-        proteinPer100g: 2,
-        costPer100g: 0.2,
-    },
-    {
-        name: "Curry sauce",
-        caloriesPer100g: 95,
-        proteinPer100g: 2,
-        costPer100g: 0.45,
-    },
-    {
-        name: "Greek yogurt",
-        caloriesPer100g: 59,
-        proteinPer100g: 10,
-        costPer100g: 0.4,
-    },
-    {
-        name: "Banana",
-        caloriesPer100g: 89,
-        proteinPer100g: 1,
-        costPer100g: 0.25,
-    },
-];
+import { ingredients as ingredientDatabase } from "@/data/ingredients";
 
 type RecipeIngredient = {
     id: number;
@@ -65,9 +33,9 @@ export default function CreateRecipePage() {
                 const multiplier = ingredient.amount / 100;
 
                 return {
-                    calories: sum.calories + found.caloriesPer100g * multiplier,
-                    protein: sum.protein + found.proteinPer100g * multiplier,
-                    cost: sum.cost + found.costPer100g * multiplier,
+                    calories: sum.calories + found.calories * multiplier,
+                    protein: sum.protein + found.protein * multiplier,
+                    cost: sum.cost + found.cost * multiplier,
                 };
             },
             { calories: 0, protein: 0, cost: 0 }

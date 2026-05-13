@@ -4,54 +4,7 @@ import { useMemo, useState } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
 import { Plus } from "lucide-react";
-
-const ingredients = [
-    {
-        name: "Chicken breast",
-        emoji: "🍗",
-        calories: 110,
-        protein: 23,
-        carbs: 0,
-        fat: 2,
-        cost: "0.85 € / 100g",
-    },
-    {
-        name: "Greek yogurt",
-        emoji: "🥣",
-        calories: 59,
-        protein: 10,
-        carbs: 4,
-        fat: 0,
-        cost: "0.40 € / 100g",
-    },
-    {
-        name: "Rice",
-        emoji: "🍚",
-        calories: 130,
-        protein: 2,
-        carbs: 28,
-        fat: 0,
-        cost: "0.20 € / 100g",
-    },
-    {
-        name: "Cucumber",
-        emoji: "🥒",
-        calories: 15,
-        protein: 1,
-        carbs: 3,
-        fat: 0,
-        cost: "0.30 € / 100g",
-    },
-    {
-        name: "Banana",
-        emoji: "🍌",
-        calories: 89,
-        protein: 1,
-        carbs: 23,
-        fat: 0,
-        cost: "0.25 € / 100g",
-    },
-];
+import { ingredients } from "@/data/ingredients";
 
 export default function IngredientsPage() {
     const [search, setSearch] = useState("");
@@ -164,23 +117,6 @@ export default function IngredientsPage() {
                                             </p>
                                         </div>
 
-                                        <div className="rounded-2xl bg-blue-50 p-4">
-                                            <p className="text-xs font-bold uppercase text-blue-400">
-                                                Carbs
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-rose-950">
-                                                {ingredient.carbs}g
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-2xl bg-yellow-50 p-4">
-                                            <p className="text-xs font-bold uppercase text-yellow-500">
-                                                Fat
-                                            </p>
-                                            <p className="mt-1 text-xl font-black text-rose-950">
-                                                {ingredient.fat}g
-                                            </p>
-                                        </div>
                                     </div>
 
                                     <div className="mt-4 rounded-2xl bg-pink-50 p-4">
