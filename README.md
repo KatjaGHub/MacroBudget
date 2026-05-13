@@ -108,4 +108,4 @@ MVP goals:
 
 ## 💖 Author
 
-Made with caffeine and meal prep motivation.
+Made to simplify meal tracking, weight loss and budgeting.
