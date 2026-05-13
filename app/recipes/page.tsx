@@ -2,13 +2,22 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Plus } from "lucide-react";
 import ScrollToTop from "@/components/ScrollToTop";
 import { recipes } from "@/data/recipes";
 import { ingredients } from "@/data/ingredients";
+import { Plus, Trash2 } from "lucide-react";
 
 export default function RecipesPage() {
     const [search, setSearch] = useState("");
+    const handleDeleteRecipe = (recipeName: string) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${recipeName}"?`
+        );
+
+        if (!confirmed) return;
+
+        alert("Later this will delete from Supabase ♡");
+    };
 
     const recipesWithDetails = recipes.map((recipe) => {
         const recipeIngredients = recipe.ingredients.map((recipeIngredient) => {
@@ -145,12 +154,21 @@ export default function RecipesPage() {
                                             </p>
                                         </div>
 
-                                        <Link
-                                            href={`/recipes/${recipe.slug}`}
-                                            className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
-                                        >
-                                            View ♡
-                                        </Link>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleDeleteRecipe(recipe.name)}
+                                                className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+
+                                            <Link
+                                                href={`/recipes/${recipe.slug}`}
+                                                className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
+                                            >
+                                                View ♡
+                                            </Link>
+                                        </div>
                                     </div>
 
                                     <div className="mt-6 grid grid-cols-3 gap-3">

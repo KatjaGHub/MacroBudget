@@ -3,11 +3,20 @@
 import { useMemo, useState } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { ingredients } from "@/data/ingredients";
 
 export default function IngredientsPage() {
     const [search, setSearch] = useState("");
+    const handleDeleteIngredient = (ingredientName: string) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${ingredientName}"?`
+        );
+
+        if (!confirmed) return;
+
+        alert("Later this will delete from Supabase ♡");
+    };
 
     const filteredIngredients = useMemo(() => {
         return ingredients
@@ -86,8 +95,18 @@ export default function IngredientsPage() {
                                     key={ingredient.name}
                                     className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.18)]"
                                 >
-                                    <div className="inline-flex rounded-full bg-pink-100 px-4 py-2 text-3xl">
-                                        {ingredient.emoji}
+                                    <div className="flex items-start justify-between gap-4">
+                                        <div className="inline-flex rounded-full bg-pink-100 px-4 py-2 text-3xl">
+                                            {ingredient.emoji}
+                                        </div>
+
+                                        <button
+                                            onClick={() => handleDeleteIngredient(ingredient.name)}
+                                            className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
+                                            aria-label={`Delete ${ingredient.name}`}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                     </div>
 
                                     <h3 className="mt-4 text-2xl font-black text-rose-950">
@@ -95,7 +114,7 @@ export default function IngredientsPage() {
                                     </h3>
 
                                     <p className="mt-1 text-sm font-medium text-rose-500">
-                                        Nutrition per 100g
+                                        Nutrition per {ingredient.unit === "g" ? "100g" : "piece"}
                                     </p>
 
                                     <div className="mt-6 grid grid-cols-2 gap-3">
@@ -103,6 +122,7 @@ export default function IngredientsPage() {
                                             <p className="text-xs font-bold uppercase text-orange-400">
                                                 Calories
                                             </p>
+
                                             <p className="mt-1 text-xl font-black text-rose-950">
                                                 {ingredient.calories}
                                             </p>
@@ -112,19 +132,21 @@ export default function IngredientsPage() {
                                             <p className="text-xs font-bold uppercase text-purple-400">
                                                 Protein
                                             </p>
+
                                             <p className="mt-1 text-xl font-black text-rose-950">
                                                 {ingredient.protein}g
                                             </p>
                                         </div>
-
                                     </div>
 
                                     <div className="mt-4 rounded-2xl bg-pink-50 p-4">
                                         <p className="text-xs font-bold uppercase text-pink-400">
                                             Cost
                                         </p>
+
                                         <p className="mt-1 text-xl font-black text-rose-950">
-                                            {ingredient.cost}
+                                            {ingredient.cost} € /{" "}
+                                            {ingredient.unit === "g" ? "100g" : "piece"}
                                         </p>
                                     </div>
                                 </article>
