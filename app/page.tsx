@@ -1,32 +1,27 @@
 export default function Home() {
   return (
-    <main className="min-h-screen bg-stone-50 p-8">
-      <h1 className="text-4xl font-bold text-stone-900">
-        MacroBudget 🍽️
-      </h1>
+    <main className="mx-auto max-w-6xl p-6">
+      <h1 className="text-4xl text-rose-950 font-bold">Dashboard</h1>
 
-      <p className="mt-4 text-lg text-stone-700">
-        Track meals, macros and food costs.
+      <p className="mt-2 text-stone-600">
+        Made for easier tracking during weight loss and budgeting.
       </p>
 
-      <div className="mt-8 rounded-2xl bg-white p-6 shadow-sm">
-        <h2 className="text-2xl font-semibold">Today</h2>
+      <div className="mt-8 grid gap-4 md:grid-cols-3">
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="text-sm text-rose-500">Today&apos;s calories</p>
+          <p className="mt-2 text-3xl font-black text-rose-950">0 kcal</p>
+        </div>
 
-        <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <div className="rounded-xl bg-stone-100 p-4">
-            <p className="text-sm text-stone-500">Calories</p>
-            <p className="text-2xl font-bold">0 kcal</p>
-          </div>
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="text-sm text-rose-500">Today&apos;s protein</p>
+          <p className="mt-2 text-3xl font-black text-rose-950">0 g</p>
+          
+        </div>
 
-          <div className="rounded-xl bg-stone-100 p-4">
-            <p className="text-sm text-stone-500">Protein</p>
-            <p className="text-2xl font-bold">0 g</p>
-          </div>
-
-          <div className="rounded-xl bg-stone-100 p-4">
-            <p className="text-sm text-stone-500">Cost</p>
-            <p className="text-2xl font-bold">0.00 €</p>
-          </div>
+        <div className="rounded-2xl bg-white p-5 shadow-sm">
+          <p className="text-sm text-rose-500">Today&apos;s cost</p>
+          <p className="mt-2 text-3xl font-black text-rose-950">0.00 €</p>
         </div>
       </div>
     </main>
