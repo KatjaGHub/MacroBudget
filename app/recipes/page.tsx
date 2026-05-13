@@ -77,17 +77,17 @@ export default function RecipesPage() {
                 </p>
 
 
-                <div className="mt-6 flex items-center gap-3">
+                <div className="mt-6 grid gap-4 md:grid-cols-[1fr_260px]">
                     <input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search recipes or ingredients..."
+                        placeholder="Search recipes..."
                         className="w-full rounded-full border border-pink-100 bg-white px-5 py-3 text-rose-900 shadow-sm outline-none placeholder:text-rose-300 focus:border-pink-300"
                     />
 
                     <Link
                         href="/create-recipe"
-                        className="flex min-w-[220px] items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
+                        className="flex h-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                     >
                         <Plus size={20} strokeWidth={3} />
                         Create recipe
