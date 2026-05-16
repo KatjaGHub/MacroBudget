@@ -50,7 +50,8 @@ export default function MealPlanPage() {
     });
   }, [weekOffset]);
 
-  const today = weekDays[0].date;
+  const today = formatDate(new Date());
+  
   const weekLabel = `${weekDays[0].label} - ${weekDays[6].label}`;
 
   const [selectedDate, setSelectedDate] = useState(today);
