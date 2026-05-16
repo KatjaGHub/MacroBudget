@@ -49,9 +49,8 @@ export default function MealPlanPage() {
       };
     });
   }, [weekOffset]);
-
   const today = formatDate(new Date());
-  
+
   const weekLabel = `${weekDays[0].label} - ${weekDays[6].label}`;
 
   const [selectedDate, setSelectedDate] = useState(today);
@@ -150,8 +149,7 @@ export default function MealPlanPage() {
 
   const selectedDayTotals = getTotals(selectedDayItems);
 
-  const selectedDayLabel =
-    weekDays.find((day) => day.date === selectedDate)?.label ?? "Selected day";
+  const selectedDayLabel = prettyDate(new Date(selectedDate));
 
   const addMealItem = () => {
     if (!selectedItemId) return;
