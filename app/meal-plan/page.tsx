@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
 import { recipes } from "@/data/recipes";
 import { ingredients } from "@/data/ingredients";
 
@@ -32,10 +32,12 @@ function prettyDate(date: Date) {
 }
 
 export default function MealPlanPage() {
+
+  const [weekOffset, setWeekOffset] = useState(0);
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
-      date.setDate(date.getDate() + index);
+      date.setDate(date.getDate() + weekOffset * 7 + index);
 
       return {
         date: formatDate(date),
@@ -46,9 +48,10 @@ export default function MealPlanPage() {
         }),
       };
     });
-  }, []);
+  }, [weekOffset]);
 
   const today = weekDays[0].date;
+  const weekLabel = `${weekDays[0].label} - ${weekDays[6].label}`;
 
   const [selectedDate, setSelectedDate] = useState(today);
   const [mealType, setMealType] = useState<MealType>("Lunch");
@@ -329,17 +332,38 @@ export default function MealPlanPage() {
           })}
         </div>
       </section>
+      <section className="mt-8 flex items-center justify-between rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+        <button
+          onClick={() => setWeekOffset((current) => current - 1)}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-100 text-pink-500 transition hover:bg-pink-200"
+        >
+          <ChevronLeft size={22} />
+        </button>
 
+        <div className="text-center">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-400">
+            week
+          </p>
+          <p className="mt-1 text-lg font-black text-rose-950">{weekLabel}</p>
+        </div>
+
+        <button
+          onClick={() => setWeekOffset((current) => current + 1)}
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-100 text-pink-500 transition hover:bg-pink-200"
+        >
+          <ChevronRight size={22} />
+        </button>
+      </section>
       <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
         {weekDays.map((day) => (
           <button
             key={day.date}
             onClick={() => setSelectedDate(day.date)}
             className={`rounded-2xl border p-4 text-left transition ${selectedDate === day.date
-                ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-                : day.date === today
-                  ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
-                  : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
+              ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+              : day.date === today
+                ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
+                : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
               }`}
           >
             <p className="text-sm font-black">{day.shortLabel}</p>
