@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import AuthGate from "@/components/AuthGate";
+import LogoutButton from "@/components/LogoutButton";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -54,11 +56,12 @@ export default function RootLayout({
                 >
                   Shopping List
                 </a>
+                <LogoutButton />
               </div>
             </div>
           </nav>
 
-          {children}
+          <AuthGate>{children}</AuthGate>
         </div>
       </body>
     </html>

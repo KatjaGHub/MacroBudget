@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 const ingredientTypes = [
   { emoji: "🍗", label: "Protein" },
@@ -85,11 +86,10 @@ export default function CreateIngredientPage() {
                   key={type.emoji}
                   type="button"
                   onClick={() => setEmoji(type.emoji)}
-                  className={`rounded-2xl border p-4 text-left transition ${
-                    emoji === type.emoji
+                  className={`rounded-2xl border p-4 text-left transition ${emoji === type.emoji
                       ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
                       : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
-                  }`}
+                    }`}
                 >
                   <div className="text-3xl">{type.emoji}</div>
                   <p className="mt-2 text-sm font-black">{type.label}</p>
@@ -113,11 +113,10 @@ export default function CreateIngredientPage() {
                     setPackageAmount("");
                     setPackagePrice("");
                   }}
-                  className={`rounded-2xl border p-4 text-center text-lg font-black transition ${
-                    unit === option
+                  className={`rounded-2xl border p-4 text-center text-lg font-black transition ${unit === option
                       ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
                       : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
-                  }`}
+                    }`}
                 >
                   {option === "g" ? "Grams" : "Pieces"}
                 </button>
@@ -205,8 +204,24 @@ export default function CreateIngredientPage() {
           </div>
 
           <button
-            onClick={() => {
-              alert("Later this will save to Supabase ♡");
+            onClick={async () => {
+              const { error } = await supabase.from("ingredients").insert({
+                name,
+                emoji,
+                unit,
+                calories: Number(calories),
+                protein: Number(protein),
+                cost: calculatedCost,
+                package_amount: Number(packageAmount),
+                package_price: Number(packagePrice),
+              });
+
+              if (error) {
+                alert(error.message);
+                return;
+              }
+
+              alert("Ingredient saved ♡");
             }}
             className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
           >
