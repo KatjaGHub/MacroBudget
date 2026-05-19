@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ingredients as ingredientDatabase } from "@/data/ingredients";
+import { supabase } from "@/lib/supabase";
 
 type RecipeIngredient = {
     id: number;
@@ -224,7 +225,53 @@ export default function CreateRecipePage() {
                     </div>
 
                     <button
-                        onClick={() => alert("Later this will save to Supabase ♡")}
+                        onClick={async () => {
+                            if (!recipeName.trim()) {
+                                alert("Please enter a recipe name.");
+                                return;
+                            }
+
+                            const { data: recipe, error: recipeError } = await supabase
+                                .from("recipes")
+                                .insert({
+                                    name: recipeName,
+                                    servings,
+                                    instructions,
+                                })
+                                .select()
+                                .single();
+
+                            if (recipeError) {
+                                alert(recipeError.message);
+                                return;
+                            }
+
+                            const recipeIngredients = ingredients
+                                .filter((ingredient) => ingredient.name && ingredient.amount > 0)
+                                .map((ingredient) => {
+                                    const selectedIngredient = ingredientDatabase.find(
+                                        (item) => item.name === ingredient.name
+                                    );
+
+                                    return {
+                                        recipe_id: recipe.id,
+                                        ingredient_id: selectedIngredient?.id,
+                                        amount: ingredient.amount,
+                                    };
+                                })
+                                .filter((item) => item.ingredient_id);
+
+                            const { error: ingredientsError } = await supabase
+                                .from("recipe_ingredients")
+                                .insert(recipeIngredients);
+
+                            if (ingredientsError) {
+                                alert(ingredientsError.message);
+                                return;
+                            }
+
+                            window.location.href = "/recipes";
+                        }}
                         className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
                     >
                         Save Recipe ♡
