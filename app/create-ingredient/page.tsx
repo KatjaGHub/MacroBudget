@@ -36,6 +36,23 @@ export default function CreateIngredientPage() {
     return price / amount;
   }, [packageAmount, packagePrice, unit]);
 
+  const getHouseholdId = async () => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+
+    if (!userId) return null;
+
+    const { data } = await supabase
+      .from("household_members")
+      .select("household_id")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .single();
+
+    return data?.household_id ?? null;
+  };
+
   return (
     <main className="mx-auto max-w-6xl p-6">
       <Link
@@ -87,8 +104,8 @@ export default function CreateIngredientPage() {
                   type="button"
                   onClick={() => setEmoji(type.emoji)}
                   className={`rounded-2xl border p-4 text-left transition ${emoji === type.emoji
-                      ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-                      : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                    ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                    : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                     }`}
                 >
                   <div className="text-3xl">{type.emoji}</div>
@@ -114,8 +131,8 @@ export default function CreateIngredientPage() {
                     setPackagePrice("");
                   }}
                   className={`rounded-2xl border p-4 text-center text-lg font-black transition ${unit === option
-                      ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-                      : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                    ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                    : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                     }`}
                 >
                   {option === "g" ? "Grams" : "Pieces"}
@@ -205,7 +222,15 @@ export default function CreateIngredientPage() {
 
           <button
             onClick={async () => {
+              const householdId = await getHouseholdId();
+
+              if (!householdId) {
+                alert("No household found.");
+                return;
+              }
+
               const { error } = await supabase.from("ingredients").insert({
+                household_id: householdId,
                 name,
                 emoji,
                 unit,
@@ -221,7 +246,7 @@ export default function CreateIngredientPage() {
                 return;
               }
 
-              alert("Ingredient saved ♡");
+              window.location.href = "/ingredients";
             }}
             className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
           >

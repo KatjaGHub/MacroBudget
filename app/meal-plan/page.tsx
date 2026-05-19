@@ -45,12 +45,17 @@ type MealPlanRow = {
   recipe_id: number | null;
   ingredient_id: number | null;
   amount: number;
+  household_id: number | null;
 };
 
 const mealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner", "Snack"];
 
 function formatDate(date: Date) {
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
 }
 
 function prettyDate(date: Date) {
@@ -93,12 +98,35 @@ export default function MealPlanPage() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [planItems, setPlanItems] = useState<MealPlanItem[]>([]);
+  const [householdId, setHouseholdId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+
+      if (!userId) return;
+
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("household_members")
+        .select("household_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
+
+      if (membershipError) {
+        alert(membershipError.message);
+        return;
+      }
+
+      const currentHouseholdId = membershipData.household_id;
+      setHouseholdId(currentHouseholdId);
+
       const { data: ingredientsData, error: ingredientsError } = await supabase
         .from("ingredients")
         .select("id, name, unit, calories, protein, cost")
+        .eq("household_id", currentHouseholdId)
         .order("name", { ascending: true });
 
       if (ingredientsError) {
@@ -110,22 +138,23 @@ export default function MealPlanPage() {
         .from("recipes")
         .select(
           `
+      id,
+      name,
+      servings,
+      recipe_ingredients (
+        amount,
+        ingredients (
           id,
           name,
-          servings,
-          recipe_ingredients (
-            amount,
-            ingredients (
-              id,
-              name,
-              unit,
-              calories,
-              protein,
-              cost
-            )
-          )
-        `
+          unit,
+          calories,
+          protein,
+          cost
         )
+      )
+    `
+        )
+        .eq("household_id", currentHouseholdId)
         .order("name", { ascending: true });
 
       if (recipesError) {
@@ -133,15 +162,10 @@ export default function MealPlanPage() {
         return;
       }
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const userId = sessionData.session?.user.id;
-
-      if (!userId) return;
-
       const { data: mealPlanData, error: mealPlanError } = await supabase
         .from("meal_plan_items")
         .select("*")
-        .eq("user_id", userId);
+        .eq("household_id", currentHouseholdId);
 
       if (mealPlanError) {
         alert(mealPlanError.message);
@@ -255,6 +279,10 @@ export default function MealPlanPage() {
       alert("You need to be logged in.");
       return;
     }
+    if (!householdId) {
+      alert("No household found.");
+      return;
+    }
 
     const itemAmount = Number(amount) || 1;
 
@@ -262,6 +290,7 @@ export default function MealPlanPage() {
       .from("meal_plan_items")
       .insert({
         user_id: userId,
+        household_id: householdId,
         date: selectedDate,
         meal_type: mealType,
         item_type: itemType,
@@ -326,7 +355,7 @@ export default function MealPlanPage() {
 
   return (
     <main className="mx-auto max-w-6xl p-6">
-      
+
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
@@ -487,10 +516,10 @@ export default function MealPlanPage() {
             key={day.date}
             onClick={() => setSelectedDate(day.date)}
             className={`rounded-2xl border p-4 text-left transition ${selectedDate === day.date
-                ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-                : day.date === today
-                  ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
-                  : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
+              ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+              : day.date === today
+                ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
+                : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
               }`}
           >
             <p className="text-sm font-black">{day.shortLabel}</p>

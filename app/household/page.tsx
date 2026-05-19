@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type Household = {
@@ -17,8 +17,11 @@ export default function HouseholdPage() {
     const [household, setHousehold] = useState<Household | null>(null);
     const [inviteCode, setInviteCode] = useState("");
     const [loading, setLoading] = useState(true);
+    const hasCheckedHousehold = useRef(false);
 
     useEffect(() => {
+        if (hasCheckedHousehold.current) return;
+        hasCheckedHousehold.current = true;
         const fetchOrCreateHousehold = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
             const userId = sessionData.session?.user.id;
@@ -28,19 +31,21 @@ export default function HouseholdPage() {
                 return;
             }
 
-            const { data: existingMembership } = await supabase
+            const { data: existingMemberships } = await supabase
                 .from("household_members")
                 .select(
                     `
-          households (
-            id,
-            name,
-            invite_code
-          )
-        `
+    households (
+      id,
+      name,
+      invite_code
+    )
+  `
                 )
                 .eq("user_id", userId)
-                .maybeSingle();
+                .limit(1);
+
+            const existingMembership = existingMemberships?.[0];
 
             if (existingMembership?.households) {
                 setHousehold(existingMembership.households as Household);
@@ -121,6 +126,35 @@ export default function HouseholdPage() {
         setInviteCode("");
     };
 
+    const leaveHousehold = async () => {
+        if (!household) return;
+
+        const confirmed = window.confirm(
+            `Are you sure you want to leave "${household.name}"?`
+        );
+
+        if (!confirmed) return;
+
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user.id;
+
+        if (!userId) return;
+
+        const { error } = await supabase
+            .from("household_members")
+            .delete()
+            .eq("user_id", userId)
+            .eq("household_id", household.id);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        setHousehold(null);
+        window.location.reload();
+    };
+
     if (loading) {
         return (
             <main className="mx-auto max-w-3xl p-6">
@@ -151,6 +185,7 @@ export default function HouseholdPage() {
                         current household
                     </p>
 
+
                     <h2 className="mt-2 text-3xl font-black text-rose-950">
                         {household.name}
                     </h2>
@@ -168,6 +203,12 @@ export default function HouseholdPage() {
                             {household.invite_code}
                         </p>
                     </div>
+                    <button
+                        onClick={leaveHousehold}
+                        className="mt-5 w-full rounded-full bg-rose-100 px-6 py-4 font-black text-rose-500 transition hover:bg-rose-200"
+                    >
+                        Leave household
+                    </button>
                 </section>
             )}
 

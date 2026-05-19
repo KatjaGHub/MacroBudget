@@ -116,6 +116,8 @@ export default function CreateRecipePage() {
         );
     };
 
+
+
     const saveRecipe = async () => {
         if (!recipeName.trim()) {
             alert("Please enter a recipe name.");
@@ -131,9 +133,17 @@ export default function CreateRecipePage() {
             return;
         }
 
+        const householdId = await getHouseholdId();
+
+        if (!householdId) {
+            alert("No household found.");
+            return;
+        }
+
         const { data: recipe, error: recipeError } = await supabase
             .from("recipes")
             .insert({
+                household_id: householdId,
                 name: recipeName,
                 servings,
                 instructions,
@@ -162,6 +172,23 @@ export default function CreateRecipePage() {
         }
 
         window.location.href = "/recipes";
+    };
+
+    const getHouseholdId = async () => {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user.id;
+
+        if (!userId) return null;
+
+        const { data } = await supabase
+            .from("household_members")
+            .select("household_id")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+        return data?.household_id ?? null;
     };
 
     return (
