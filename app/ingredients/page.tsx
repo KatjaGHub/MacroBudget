@@ -1,22 +1,68 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
-import { ingredients } from "@/data/ingredients";
+import { supabase } from "@/lib/supabase";
+
+type Ingredient = {
+    id: number;
+    name: string;
+    emoji: string;
+    unit: "g" | "pcs";
+    calories: number;
+    protein: number;
+    cost: number;
+};
 
 export default function IngredientsPage() {
     const [search, setSearch] = useState("");
-    const handleDeleteIngredient = (ingredientName: string) => {
+    const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+    const handleDeleteIngredient = async (
+        ingredientId: number,
+        ingredientName: string
+    ) => {
         const confirmed = window.confirm(
             `Are you sure you want to delete "${ingredientName}"?`
         );
 
         if (!confirmed) return;
 
-        alert("Later this will delete from Supabase ♡");
+        const { error } = await supabase
+            .from("ingredients")
+            .delete()
+            .eq("id", ingredientId);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        setIngredients((currentIngredients) =>
+            currentIngredients.filter(
+                (ingredient) => ingredient.id !== ingredientId
+            )
+        );
     };
+
+    useEffect(() => {
+        const fetchIngredients = async () => {
+            const { data, error } = await supabase
+                .from("ingredients")
+                .select("*")
+                .order("name", { ascending: true });
+
+            if (error) {
+                alert(error.message);
+                return;
+            }
+
+            setIngredients(data ?? []);
+        };
+
+        fetchIngredients();
+    }, []);
 
     const filteredIngredients = useMemo(() => {
         return ingredients
@@ -24,7 +70,7 @@ export default function IngredientsPage() {
                 ingredient.name.toLowerCase().includes(search.toLowerCase())
             )
             .sort((a, b) => a.name.localeCompare(b.name));
-    }, [search]);
+    }, [search, ingredients]);
 
     const letters = Array.from(
         new Set(filteredIngredients.map((ingredient) => ingredient.name[0].toUpperCase()))
@@ -101,7 +147,9 @@ export default function IngredientsPage() {
                                         </div>
 
                                         <button
-                                            onClick={() => handleDeleteIngredient(ingredient.name)}
+                                            onClick={() =>
+                                                handleDeleteIngredient(ingredient.id, ingredient.name)
+                                            }
                                             className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
                                             aria-label={`Delete ${ingredient.name}`}
                                         >
@@ -145,7 +193,7 @@ export default function IngredientsPage() {
                                         </p>
 
                                         <p className="mt-1 text-xl font-black text-rose-950">
-                                            {ingredient.cost} € /{" "}
+                                            {ingredient.cost.toFixed(2)} € /{" "}
                                             {ingredient.unit === "g" ? "100g" : "piece"}
                                         </p>
                                     </div>
