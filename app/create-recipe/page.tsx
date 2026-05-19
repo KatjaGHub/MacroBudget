@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabase";
 type RecipeIngredient = {
     id: number;
     ingredientId: string;
+    search: string;
     amount: number;
 };
 
@@ -29,7 +30,7 @@ export default function CreateRecipePage() {
     );
 
     const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
-        { id: Date.now(), ingredientId: "", amount: 100 },
+        { id: Date.now(), ingredientId: "", search: "", amount: 100 },
     ]);
 
     useEffect(() => {
@@ -86,6 +87,7 @@ export default function CreateRecipePage() {
             {
                 id: Date.now(),
                 ingredientId: "",
+                search: "",
                 amount: 100,
             },
         ]);
@@ -93,7 +95,7 @@ export default function CreateRecipePage() {
 
     const updateIngredient = (
         id: number,
-        field: "ingredientId" | "amount",
+        field: "ingredientId" | "search" | "amount",
         value: string
     ) => {
         setIngredients((currentIngredients) =>
@@ -245,25 +247,42 @@ export default function CreateRecipePage() {
                                         key={ingredient.id}
                                         className="grid gap-3 rounded-2xl bg-pink-50 p-3 md:grid-cols-[1fr_140px_auto]"
                                     >
-                                        <select
-                                            value={ingredient.ingredientId}
-                                            onChange={(event) =>
-                                                updateIngredient(
-                                                    ingredient.id,
-                                                    "ingredientId",
-                                                    event.target.value
-                                                )
-                                            }
-                                            className="rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none"
-                                        >
-                                            <option value="">Choose ingredient</option>
+                                        <div className="relative">
+                                            <input
+                                                value={ingredient.search}
+                                                onChange={(event) => {
+                                                    updateIngredient(ingredient.id, "search", event.target.value);
+                                                    updateIngredient(ingredient.id, "ingredientId", "");
+                                                }}
+                                                placeholder="Search ingredient..."
+                                                className="w-full rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                                            />
 
-                                            {ingredientDatabase.map((item) => (
-                                                <option key={item.id} value={item.id}>
-                                                    {item.name}
-                                                </option>
-                                            ))}
-                                        </select>
+                                            {ingredient.search && !ingredient.ingredientId && (
+                                                <div className="absolute left-0 right-0 top-14 z-20 max-h-56 overflow-y-auto rounded-2xl border border-pink-100 bg-white p-2 shadow-lg">
+                                                    {ingredientDatabase
+                                                        .filter((item) =>
+                                                            item.name.toLowerCase().includes(ingredient.search.toLowerCase())
+                                                        )
+                                                        .map((item) => (
+                                                            <button
+                                                                key={item.id}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    updateIngredient(ingredient.id, "ingredientId", String(item.id));
+                                                                    updateIngredient(ingredient.id, "search", item.name);
+                                                                }}
+                                                                className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left font-semibold text-rose-800 hover:bg-pink-50"
+                                                            >
+                                                                <span>{item.name}</span>
+                                                                <span className="text-xs text-rose-400">
+                                                                    {item.unit === "g" ? "per 100g" : "per piece"}
+                                                                </span>
+                                                            </button>
+                                                        ))}
+                                                </div>
+                                            )}
+                                        </div>
 
                                         <input
                                             type="number"
