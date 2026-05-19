@@ -1,193 +1,265 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { supabase } from "@/lib/supabase";
 
 type ShoppingItem = {
-    id: number;
-    name: string;
-    quantity: string;
-    bought: boolean;
+  id: number;
+  name: string;
+  quantity: string | null;
+  is_checked: boolean;
 };
 
 export default function ShoppingListPage() {
-    const [items, setItems] = useState<ShoppingItem[]>([
-        { id: 1, name: "Chicken breast", quantity: "600g", bought: false },
-        { id: 2, name: "Rice", quantity: "1kg", bought: false },
-        { id: 3, name: "Cucumber", quantity: "2 pcs", bought: false },
-        { id: 4, name: "Greek yogurt", quantity: "500g", bought: true },
-    ]);
+  const [items, setItems] = useState<ShoppingItem[]>([]);
+  const [newItem, setNewItem] = useState("");
+  const [newQuantity, setNewQuantity] = useState("");
+  const [householdId, setHouseholdId] = useState<number | null>(null);
 
-    const [newItem, setNewItem] = useState("");
-    const [newQuantity, setNewQuantity] = useState("");
+  useEffect(() => {
+    const fetchShoppingItems = async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
 
-    const addItem = () => {
-        if (!newItem.trim()) return;
+      if (!userId) return;
 
-        setItems([
-            {
-                id: Date.now(),
-                name: newItem.trim(),
-                quantity: newQuantity.trim(),
-                bought: false,
-            },
-            ...items,
-        ]);
+      const { data: membershipData, error: membershipError } = await supabase
+        .from("household_members")
+        .select("household_id")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .single();
 
-        setNewItem("");
-        setNewQuantity("");
+      if (membershipError) {
+        alert(membershipError.message);
+        return;
+      }
+
+      const currentHouseholdId = membershipData.household_id;
+      setHouseholdId(currentHouseholdId);
+
+      const { data, error } = await supabase
+        .from("shopping_items")
+        .select("*")
+        .eq("household_id", currentHouseholdId)
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        alert(error.message);
+        return;
+      }
+
+      setItems((data ?? []) as ShoppingItem[]);
     };
 
-    const toggleBought = (id: number) => {
-        setItems((currentItems) =>
-            currentItems.map((item) =>
-                item.id === id ? { ...item, bought: !item.bought } : item
-            )
-        );
-    };
+    fetchShoppingItems();
+  }, []);
 
-    const deleteItem = (id: number) => {
-        setItems((currentItems) => currentItems.filter((item) => item.id !== id));
-    };
+  const addItem = async () => {
+    if (!newItem.trim()) return;
 
-    const toBuyItems = items.filter((item) => !item.bought);
-    const boughtItems = items.filter((item) => item.bought);
+    if (!householdId) {
+      alert("No household found.");
+      return;
+    }
 
-    return (
-        <main className="mx-auto max-w-2xl p-6">
-            <section className="pt-10">
-                <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    shared list
-                </p>
+    const { data, error } = await supabase
+      .from("shopping_items")
+      .insert({
+        household_id: householdId,
+        name: newItem.trim(),
+        quantity: newQuantity.trim() || null,
+        is_checked: false,
+      })
+      .select()
+      .single();
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
-                    Shopping List ♡
-                </h1>
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-                <p className="mt-3 text-rose-600">
-                    Minimal grocery list for quick shopping.
-                </p>
-            </section>
+    setItems([data as ShoppingItem, ...items]);
+    setNewItem("");
+    setNewQuantity("");
+  };
 
-            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                <div className="flex gap-2">
-                    <input
-                        value={newItem}
-                        onChange={(event) => setNewItem(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter") addItem();
-                        }}
-                        placeholder="Add item..."
-                        className="min-w-0 flex-1 rounded-full bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
-                    />
+  const toggleBought = async (item: ShoppingItem) => {
+    const { error } = await supabase
+      .from("shopping_items")
+      .update({
+        is_checked: !item.is_checked,
+      })
+      .eq("id", item.id);
 
-                    <input
-                        value={newQuantity}
-                        onChange={(event) => setNewQuantity(event.target.value)}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter") addItem();
-                        }}
-                        placeholder="Qty"
-                        className="w-24 rounded-full bg-pink-50 px-4 py-4 text-center text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
-                    />
+    if (error) {
+      alert(error.message);
+      return;
+    }
 
-                    <button
-                        onClick={addItem}
-                        className="rounded-full bg-pink-500 px-5 text-2xl font-black text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
-                        aria-label="Add item"
-                    >
-                        +
-                    </button>
-                </div>
-            </section>
-
-            <section className="mt-8">
-                <div className="space-y-1">
-                    {toBuyItems.map((item) => (
-                        <div
-                            key={item.id}
-                            className="group flex items-center gap-4 rounded-2xl px-2 py-3 transition hover:bg-white/70"
-                        >
-                            <button
-                                onClick={() => toggleBought(item.id)}
-                                className="h-7 w-7 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
-                                aria-label={`Mark ${item.name} as bought`}
-                            />
-
-                            <button
-                                onClick={() => toggleBought(item.id)}
-                                className="min-w-0 flex-1 text-left"
-                            >
-                                <p className="truncate text-xl font-black text-rose-950">
-                                    {item.name}
-                                </p>
-
-                                {item.quantity && (
-                                    <p className="text-sm font-medium text-rose-400">
-                                        {item.quantity}
-                                    </p>
-                                )}
-                            </button>
-
-                            <button
-                                onClick={() => deleteItem(item.id)}
-                                className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
-                                aria-label={`Delete ${item.name}`}
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                {boughtItems.length > 0 && (
-                    <div className="mt-10">
-                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-rose-300">
-                            Bought
-                        </p>
-
-                        <div className="space-y-1">
-                            {boughtItems.map((item) => (
-                                <div
-                                    key={item.id}
-                                    className="group flex items-center gap-4 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60"
-                                >
-                                    <button
-                                        onClick={() => toggleBought(item.id)}
-                                        className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
-                                        aria-label={`Mark ${item.name} as not bought`}
-                                    >
-                                        ✓
-                                    </button>
-
-                                    <button
-                                        onClick={() => toggleBought(item.id)}
-                                        className="min-w-0 flex-1 text-left"
-                                    >
-                                        <p className="truncate text-xl font-black text-rose-400 line-through">
-                                            {item.name}
-                                        </p>
-
-                                        {item.quantity && (
-                                            <p className="text-sm font-medium text-rose-300 line-through">
-                                                {item.quantity}
-                                            </p>
-                                        )}
-                                    </button>
-
-                                    <button
-                                        onClick={() => deleteItem(item.id)}
-                                        className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
-                                        aria-label={`Delete ${item.name}`}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-            </section>
-        </main>
+    setItems((currentItems) =>
+      currentItems.map((currentItem) =>
+        currentItem.id === item.id
+          ? { ...currentItem, is_checked: !currentItem.is_checked }
+          : currentItem
+      )
     );
+  };
+
+  const deleteItem = async (id: number) => {
+    const { error } = await supabase
+      .from("shopping_items")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+  };
+
+  const toBuyItems = items.filter((item) => !item.is_checked);
+  const boughtItems = items.filter((item) => item.is_checked);
+
+  return (
+    <main className="mx-auto max-w-2xl p-6">
+      <section className="pt-10">
+        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+          shared list
+        </p>
+
+        <h1 className="mt-2 text-5xl font-black text-pink-500">
+          Shopping List ♡
+        </h1>
+
+        <p className="mt-3 text-rose-600">
+          Minimal grocery list for quick shopping.
+        </p>
+      </section>
+
+      <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+        <div className="flex gap-2">
+          <input
+            value={newItem}
+            onChange={(event) => setNewItem(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") addItem();
+            }}
+            placeholder="Add item..."
+            className="min-w-0 flex-1 rounded-full bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
+          />
+
+          <input
+            value={newQuantity}
+            onChange={(event) => setNewQuantity(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") addItem();
+            }}
+            placeholder="Qty"
+            className="w-24 rounded-full bg-pink-50 px-4 py-4 text-center text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
+          />
+
+          <button
+            onClick={addItem}
+            className="rounded-full bg-pink-500 px-5 text-2xl font-black text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
+            aria-label="Add item"
+          >
+            +
+          </button>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <div className="space-y-1">
+          {toBuyItems.map((item) => (
+            <div
+              key={item.id}
+              className="group flex items-center gap-4 rounded-2xl px-2 py-3 transition hover:bg-white/70"
+            >
+              <button
+                onClick={() => toggleBought(item)}
+                className="h-7 w-7 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
+                aria-label={`Mark ${item.name} as bought`}
+              />
+
+              <button
+                onClick={() => toggleBought(item)}
+                className="min-w-0 flex-1 text-left"
+              >
+                <p className="truncate text-xl font-black text-rose-950">
+                  {item.name}
+                </p>
+
+                {item.quantity && (
+                  <p className="text-sm font-medium text-rose-400">
+                    {item.quantity}
+                  </p>
+                )}
+              </button>
+
+              <button
+                onClick={() => deleteItem(item.id)}
+                className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
+                aria-label={`Delete ${item.name}`}
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        {boughtItems.length > 0 && (
+          <div className="mt-10">
+            <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-rose-300">
+              Bought
+            </p>
+
+            <div className="space-y-1">
+              {boughtItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="group flex items-center gap-4 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60"
+                >
+                  <button
+                    onClick={() => toggleBought(item)}
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
+                    aria-label={`Mark ${item.name} as not bought`}
+                  >
+                    ✓
+                  </button>
+
+                  <button
+                    onClick={() => toggleBought(item)}
+                    className="min-w-0 flex-1 text-left"
+                  >
+                    <p className="truncate text-xl font-black text-rose-400 line-through">
+                      {item.name}
+                    </p>
+
+                    {item.quantity && (
+                      <p className="text-sm font-medium text-rose-300 line-through">
+                        {item.quantity}
+                      </p>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => deleteItem(item.id)}
+                    className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
+                    aria-label={`Delete ${item.name}`}
+                  >
+                    <Trash2 size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </section>
+    </main>
+  );
 }
