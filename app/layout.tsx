@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import AuthGate from "@/components/AuthGate";
 import LogoutButton from "@/components/LogoutButton";
+import { Settings } from "lucide-react";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -38,25 +39,31 @@ export default function RootLayout({
               </a>
 
               <div className="flex gap-2 text-sm font-semibold">
-                <a className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/">
+                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/">
                   Dashboard
                 </a>
-                <a className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/ingredients">
+                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/ingredients">
                   Ingredients
                 </a>
-                <a className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/recipes">
+                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/recipes">
                   Recipes
                 </a>
-                <a className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/meal-plan">
+                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/meal-plan">
                   Meal Plan
                 </a>
                 <a
-                  className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100"
+                  className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100"
                   href="/shopping-list"
                 >
                   Shopping List
                 </a>
-                <LogoutButton />
+                <a
+                  href="/settings"
+                  className="flex h-11 w-11 items-center justify-center rounded-full text-rose-700 transition hover:bg-pink-100"
+                  aria-label="Settings"
+                >
+                  <Settings size={22} />
+                </a>
               </div>
             </div>
           </nav>
