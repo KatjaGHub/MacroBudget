@@ -2,36 +2,65 @@
 
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
-import { ingredients as ingredientDatabase } from "@/data/ingredients";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 
 type RecipeIngredient = {
     id: number;
-    name: string;
+    ingredientId: string;
     amount: number;
+};
+
+type Ingredient = {
+    id: number;
+    name: string;
+    unit: "g" | "pcs";
+    calories: number;
+    protein: number;
+    cost: number;
 };
 
 export default function CreateRecipePage() {
     const [recipeName, setRecipeName] = useState("");
     const [servings, setServings] = useState(4);
     const [instructions, setInstructions] = useState("");
+    const [ingredientDatabase, setIngredientDatabase] = useState<Ingredient[]>(
+        []
+    );
 
     const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
-        { id: 1, name: "Chicken breast", amount: 600 },
-        { id: 2, name: "Curry sauce", amount: 300 },
+        { id: Date.now(), ingredientId: "", amount: 100 },
     ]);
+
+    useEffect(() => {
+        const fetchIngredients = async () => {
+            const { data, error } = await supabase
+                .from("ingredients")
+                .select("id, name, unit, calories, protein, cost")
+                .order("name", { ascending: true });
+
+            if (error) {
+                alert(error.message);
+                return;
+            }
+
+            setIngredientDatabase(data ?? []);
+        };
+
+        fetchIngredients();
+    }, []);
 
     const totals = useMemo(() => {
         return ingredients.reduce(
             (sum, ingredient) => {
                 const found = ingredientDatabase.find(
-                    (item) => item.name === ingredient.name
+                    (item) => item.id === Number(ingredient.ingredientId)
                 );
 
                 if (!found) return sum;
 
-                const multiplier = ingredient.amount / 100;
+                const multiplier =
+                    found.unit === "g" ? ingredient.amount / 100 : ingredient.amount;
 
                 return {
                     calories: sum.calories + found.calories * multiplier,
@@ -41,7 +70,7 @@ export default function CreateRecipePage() {
             },
             { calories: 0, protein: 0, cost: 0 }
         );
-    }, [ingredients]);
+    }, [ingredients, ingredientDatabase]);
 
     const safeServings = Math.max(1, servings);
 
@@ -56,7 +85,7 @@ export default function CreateRecipePage() {
             ...ingredients,
             {
                 id: Date.now(),
-                name: "",
+                ingredientId: "",
                 amount: 100,
             },
         ]);
@@ -64,7 +93,7 @@ export default function CreateRecipePage() {
 
     const updateIngredient = (
         id: number,
-        field: "name" | "amount",
+        field: "ingredientId" | "amount",
         value: string
     ) => {
         setIngredients((currentIngredients) =>
@@ -83,6 +112,54 @@ export default function CreateRecipePage() {
         setIngredients((currentIngredients) =>
             currentIngredients.filter((ingredient) => ingredient.id !== id)
         );
+    };
+
+    const saveRecipe = async () => {
+        if (!recipeName.trim()) {
+            alert("Please enter a recipe name.");
+            return;
+        }
+
+        const validIngredients = ingredients.filter(
+            (ingredient) => ingredient.ingredientId && ingredient.amount > 0
+        );
+
+        if (validIngredients.length === 0) {
+            alert("Please add at least one ingredient.");
+            return;
+        }
+
+        const { data: recipe, error: recipeError } = await supabase
+            .from("recipes")
+            .insert({
+                name: recipeName,
+                servings,
+                instructions,
+            })
+            .select()
+            .single();
+
+        if (recipeError) {
+            alert(recipeError.message);
+            return;
+        }
+
+        const recipeIngredients = validIngredients.map((ingredient) => ({
+            recipe_id: recipe.id,
+            ingredient_id: Number(ingredient.ingredientId),
+            amount: ingredient.amount,
+        }));
+
+        const { error: ingredientsError } = await supabase
+            .from("recipe_ingredients")
+            .insert(recipeIngredients);
+
+        if (ingredientsError) {
+            alert(ingredientsError.message);
+            return;
+        }
+
+        window.location.href = "/recipes";
     };
 
     return (
@@ -121,8 +198,7 @@ export default function CreateRecipePage() {
                             <input
                                 value={recipeName}
                                 onChange={(event) => setRecipeName(event.target.value)}
-                                placeholder=""
-                                className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                                className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-950 outline-none"
                             />
                         </div>
 
@@ -138,7 +214,7 @@ export default function CreateRecipePage() {
                                 onChange={(event) =>
                                     setServings(Math.max(1, Number(event.target.value)))
                                 }
-                                className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                                className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-950 outline-none"
                             />
                         </div>
                     </div>
@@ -159,55 +235,67 @@ export default function CreateRecipePage() {
                         </div>
 
                         <div className="mt-4 space-y-3">
-                            {ingredients.map((ingredient) => (
-                                <div
-                                    key={ingredient.id}
-                                    className="grid gap-3 rounded-2xl bg-pink-50 p-3 md:grid-cols-[1fr_140px_auto]"
-                                >
-                                    <select
-                                        value={ingredient.name}
-                                        onChange={(event) =>
-                                            updateIngredient(
-                                                ingredient.id,
-                                                "name",
-                                                event.target.value
-                                            )
-                                        }
-                                        className="rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none"
+                            {ingredients.map((ingredient) => {
+                                const selectedIngredient = ingredientDatabase.find(
+                                    (item) => item.id === Number(ingredient.ingredientId)
+                                );
+
+                                return (
+                                    <div
+                                        key={ingredient.id}
+                                        className="grid gap-3 rounded-2xl bg-pink-50 p-3 md:grid-cols-[1fr_140px_auto]"
                                     >
-                                        <option value="">Choose ingredient</option>
+                                        <select
+                                            value={ingredient.ingredientId}
+                                            onChange={(event) =>
+                                                updateIngredient(
+                                                    ingredient.id,
+                                                    "ingredientId",
+                                                    event.target.value
+                                                )
+                                            }
+                                            className="rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none"
+                                        >
+                                            <option value="">Choose ingredient</option>
 
-                                        {ingredientDatabase.map((item) => (
-                                            <option key={item.name} value={item.name}>
-                                                {item.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                            {ingredientDatabase.map((item) => (
+                                                <option key={item.id} value={item.id}>
+                                                    {item.name}
+                                                </option>
+                                            ))}
+                                        </select>
 
-                                    <input
-                                        type="number"
-                                        min="0"
-                                        value={ingredient.amount}
-                                        onChange={(event) =>
-                                            updateIngredient(
-                                                ingredient.id,
-                                                "amount",
-                                                event.target.value
-                                            )
-                                        }
-                                        placeholder="grams"
-                                        className="rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
-                                    />
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            value={ingredient.amount}
+                                            onChange={(event) =>
+                                                updateIngredient(
+                                                    ingredient.id,
+                                                    "amount",
+                                                    event.target.value
+                                                )
+                                            }
+                                            className="rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none"
+                                        />
 
-                                    <button
-                                        onClick={() => deleteIngredient(ingredient.id)}
-                                        className="flex items-center justify-center rounded-xl p-3 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500"
-                                        aria-label={`Delete ${ingredient.name}`}
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                </div>
-                            ))}
+                                        <button
+                                            onClick={() => deleteIngredient(ingredient.id)}
+                                            className="flex items-center justify-center rounded-xl p-3 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500"
+                                            aria-label="Delete ingredient"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+
+                                        {selectedIngredient && (
+                                            <p className="md:col-span-3 text-sm font-semibold text-rose-500">
+                                                Amount in{" "}
+                                                {selectedIngredient.unit === "g" ? "grams" : "pieces"}
+                                            </p>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
@@ -225,53 +313,7 @@ export default function CreateRecipePage() {
                     </div>
 
                     <button
-                        onClick={async () => {
-                            if (!recipeName.trim()) {
-                                alert("Please enter a recipe name.");
-                                return;
-                            }
-
-                            const { data: recipe, error: recipeError } = await supabase
-                                .from("recipes")
-                                .insert({
-                                    name: recipeName,
-                                    servings,
-                                    instructions,
-                                })
-                                .select()
-                                .single();
-
-                            if (recipeError) {
-                                alert(recipeError.message);
-                                return;
-                            }
-
-                            const recipeIngredients = ingredients
-                                .filter((ingredient) => ingredient.name && ingredient.amount > 0)
-                                .map((ingredient) => {
-                                    const selectedIngredient = ingredientDatabase.find(
-                                        (item) => item.name === ingredient.name
-                                    );
-
-                                    return {
-                                        recipe_id: recipe.id,
-                                        ingredient_id: selectedIngredient?.id,
-                                        amount: ingredient.amount,
-                                    };
-                                })
-                                .filter((item) => item.ingredient_id);
-
-                            const { error: ingredientsError } = await supabase
-                                .from("recipe_ingredients")
-                                .insert(recipeIngredients);
-
-                            if (ingredientsError) {
-                                alert(ingredientsError.message);
-                                return;
-                            }
-
-                            window.location.href = "/recipes";
-                        }}
+                        onClick={saveRecipe}
                         className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
                     >
                         Save Recipe ♡
