@@ -15,17 +15,20 @@ function makeInviteCode() {
 
 export default function HouseholdPage() {
     const [household, setHousehold] = useState<Household | null>(null);
-    const [householdName, setHouseholdName] = useState("");
     const [inviteCode, setInviteCode] = useState("");
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchHousehold = async () => {
+        const fetchOrCreateHousehold = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
             const userId = sessionData.session?.user.id;
 
-            if (!userId) return;
+            if (!userId) {
+                setLoading(false);
+                return;
+            }
 
-            const { data, error } = await supabase
+            const { data: existingMembership } = await supabase
                 .from("household_members")
                 .select(
                     `
@@ -37,55 +40,48 @@ export default function HouseholdPage() {
         `
                 )
                 .eq("user_id", userId)
+                .maybeSingle();
+
+            if (existingMembership?.households) {
+                setHousehold(existingMembership.households as Household);
+                setLoading(false);
+                return;
+            }
+
+            const { data: createdHousehold, error: householdError } = await supabase
+                .from("households")
+                .insert({
+                    name: "My Household",
+                    invite_code: makeInviteCode(),
+                })
+                .select()
                 .single();
 
-            if (error) return;
+            if (householdError) {
+                alert(householdError.message);
+                setLoading(false);
+                return;
+            }
 
-            setHousehold(data.households as Household);
+            const { error: memberError } = await supabase
+                .from("household_members")
+                .insert({
+                    household_id: createdHousehold.id,
+                    user_id: userId,
+                });
+
+            if (memberError) {
+                alert(memberError.message);
+                setLoading(false);
+                return;
+            }
+
+            setHousehold(createdHousehold);
+            setLoading(false);
         };
 
-        fetchHousehold();
+        fetchOrCreateHousehold();
     }, []);
-
-    const createHousehold = async () => {
-        if (!householdName.trim()) {
-            alert("Please enter a household name.");
-            return;
-        }
-
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData.session?.user.id;
-
-        if (!userId) return;
-
-        const { data: createdHousehold, error: householdError } = await supabase
-            .from("households")
-            .insert({
-                name: householdName,
-                invite_code: makeInviteCode(),
-            })
-            .select()
-            .single();
-
-        if (householdError) {
-            alert(householdError.message);
-            return;
-        }
-
-        const { error: memberError } = await supabase
-            .from("household_members")
-            .insert({
-                household_id: createdHousehold.id,
-                user_id: userId,
-            });
-
-        if (memberError) {
-            alert(memberError.message);
-            return;
-        }
-
-        setHousehold(createdHousehold);
-    };
 
     const joinHousehold = async () => {
         if (!inviteCode.trim()) {
@@ -122,7 +118,16 @@ export default function HouseholdPage() {
         }
 
         setHousehold(foundHousehold);
+        setInviteCode("");
     };
+
+    if (loading) {
+        return (
+            <main className="mx-auto max-w-3xl p-6">
+                <p className="font-black text-pink-500">Loading household ♡</p>
+            </main>
+        );
+    }
 
     return (
         <main className="mx-auto max-w-3xl p-6">
@@ -136,11 +141,11 @@ export default function HouseholdPage() {
                 </h1>
 
                 <p className="mt-3 text-rose-700">
-                    Create or join a shared MacroBudget household.
+                    Use this invite code to sync MacroBudget with your partner.
                 </p>
             </section>
 
-            {household ? (
+            {household && (
                 <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                     <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                         current household
@@ -149,6 +154,10 @@ export default function HouseholdPage() {
                     <h2 className="mt-2 text-3xl font-black text-rose-950">
                         {household.name}
                     </h2>
+
+                    <p className="mt-2 text-sm font-semibold text-rose-500">
+                        Household ID: {household.id}
+                    </p>
 
                     <div className="mt-6 rounded-2xl bg-pink-50 p-5">
                         <p className="text-xs font-bold uppercase text-pink-400">
@@ -160,47 +169,30 @@ export default function HouseholdPage() {
                         </p>
                     </div>
                 </section>
-            ) : (
-                <section className="mt-8 grid gap-6 md:grid-cols-2">
-                    <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                        <h2 className="text-2xl font-black text-pink-500">
-                            Create household
-                        </h2>
-
-                        <input
-                            value={householdName}
-                            onChange={(event) => setHouseholdName(event.target.value)}
-                            className="mt-5 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
-                        />
-
-                        <button
-                            onClick={createHousehold}
-                            className="mt-5 w-full rounded-full bg-pink-500 px-6 py-4 font-black text-white"
-                        >
-                            Create ♡
-                        </button>
-                    </div>
-
-                    <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                        <h2 className="text-2xl font-black text-pink-500">
-                            Join with code
-                        </h2>
-
-                        <input
-                            value={inviteCode}
-                            onChange={(event) => setInviteCode(event.target.value)}
-                            className="mt-5 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold uppercase tracking-widest text-rose-950 outline-none"
-                        />
-
-                        <button
-                            onClick={joinHousehold}
-                            className="mt-5 w-full rounded-full bg-pink-500 px-6 py-4 font-black text-white"
-                        >
-                            Join ♡
-                        </button>
-                    </div>
-                </section>
             )}
+
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <h2 className="text-2xl font-black text-pink-500">
+                    Join another household
+                </h2>
+
+                <p className="mt-2 text-sm font-semibold text-rose-500">
+                    Enter your partner&apos;s invite code to sync together.
+                </p>
+
+                <input
+                    value={inviteCode}
+                    onChange={(event) => setInviteCode(event.target.value)}
+                    className="mt-5 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold uppercase tracking-widest text-rose-950 outline-none"
+                />
+
+                <button
+                    onClick={joinHousehold}
+                    className="mt-5 w-full rounded-full bg-pink-500 px-6 py-4 font-black text-white transition hover:bg-pink-600"
+                >
+                    Join ♡
+                </button>
+            </section>
         </main>
     );
 }
