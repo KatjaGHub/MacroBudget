@@ -1,12 +1,32 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
-import { recipes } from "@/data/recipes";
-import { ingredients } from "@/data/ingredients";
+import { supabase } from "@/lib/supabase";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
 type ItemType = "recipe" | "ingredient";
+
+type Ingredient = {
+  id: number;
+  name: string;
+  unit: "g" | "pcs";
+  calories: number;
+  protein: number;
+  cost: number;
+};
+
+type RecipeIngredient = {
+  amount: number;
+  ingredients: Ingredient | null;
+};
+
+type Recipe = {
+  id: number;
+  name: string;
+  servings: number;
+  recipe_ingredients: RecipeIngredient[];
+};
 
 type MealPlanItem = {
   id: number;
@@ -14,6 +34,16 @@ type MealPlanItem = {
   mealType: MealType;
   itemType: ItemType;
   itemId: number;
+  amount: number;
+};
+
+type MealPlanRow = {
+  id: number;
+  date: string;
+  meal_type: MealType;
+  item_type: ItemType;
+  recipe_id: number | null;
+  ingredient_id: number | null;
   amount: number;
 };
 
@@ -32,8 +62,8 @@ function prettyDate(date: Date) {
 }
 
 export default function MealPlanPage() {
-
   const [weekOffset, setWeekOffset] = useState(0);
+
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, index) => {
       const date = new Date();
@@ -49,8 +79,8 @@ export default function MealPlanPage() {
       };
     });
   }, [weekOffset]);
-  const today = formatDate(new Date());
 
+  const today = formatDate(new Date());
   const weekLabel = `${weekDays[0].label} - ${weekDays[6].label}`;
 
   const [selectedDate, setSelectedDate] = useState(today);
@@ -60,16 +90,83 @@ export default function MealPlanPage() {
   const [amount, setAmount] = useState("1");
   const [expandedMeals, setExpandedMeals] = useState<MealType[]>([]);
 
-  const [planItems, setPlanItems] = useState<MealPlanItem[]>([
-    {
-      id: 1,
-      date: today,
-      mealType: "Lunch",
-      itemType: "recipe",
-      itemId: 1,
-      amount: 1,
-    },
-  ]);
+  const [ingredients, setIngredients] = useState<Ingredient[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [planItems, setPlanItems] = useState<MealPlanItem[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const { data: ingredientsData, error: ingredientsError } = await supabase
+        .from("ingredients")
+        .select("id, name, unit, calories, protein, cost")
+        .order("name", { ascending: true });
+
+      if (ingredientsError) {
+        alert(ingredientsError.message);
+        return;
+      }
+
+      const { data: recipesData, error: recipesError } = await supabase
+        .from("recipes")
+        .select(
+          `
+          id,
+          name,
+          servings,
+          recipe_ingredients (
+            amount,
+            ingredients (
+              id,
+              name,
+              unit,
+              calories,
+              protein,
+              cost
+            )
+          )
+        `
+        )
+        .order("name", { ascending: true });
+
+      if (recipesError) {
+        alert(recipesError.message);
+        return;
+      }
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      const userId = sessionData.session?.user.id;
+
+      if (!userId) return;
+
+      const { data: mealPlanData, error: mealPlanError } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("user_id", userId);
+
+      if (mealPlanError) {
+        alert(mealPlanError.message);
+        return;
+      }
+
+      setIngredients((ingredientsData ?? []) as Ingredient[]);
+      setRecipes((recipesData ?? []) as Recipe[]);
+      setPlanItems(
+        ((mealPlanData ?? []) as MealPlanRow[]).map((item) => ({
+          id: item.id,
+          date: item.date,
+          mealType: item.meal_type,
+          itemType: item.item_type,
+          itemId:
+            item.item_type === "recipe"
+              ? Number(item.recipe_id)
+              : Number(item.ingredient_id),
+          amount: Number(item.amount),
+        }))
+      );
+    };
+
+    fetchData();
+  }, []);
 
   const getItemDetails = (item: MealPlanItem) => {
     if (item.itemType === "ingredient") {
@@ -95,11 +192,9 @@ export default function MealPlanPage() {
 
     if (!recipe) return null;
 
-    const totals = recipe.ingredients.reduce(
+    const totals = recipe.recipe_ingredients.reduce(
       (sum, recipeIngredient) => {
-        const ingredient = ingredients.find(
-          (ingredient) => ingredient.id === recipeIngredient.ingredientId
-        );
+        const ingredient = recipeIngredient.ingredients;
 
         if (!ingredient) return sum;
 
@@ -148,21 +243,54 @@ export default function MealPlanPage() {
   );
 
   const selectedDayTotals = getTotals(selectedDayItems);
-
   const selectedDayLabel = prettyDate(new Date(selectedDate));
 
-  const addMealItem = () => {
+  const addMealItem = async () => {
     if (!selectedItemId) return;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const userId = sessionData.session?.user.id;
+
+    if (!userId) {
+      alert("You need to be logged in.");
+      return;
+    }
+
+    const itemAmount = Number(amount) || 1;
+
+    const { data, error } = await supabase
+      .from("meal_plan_items")
+      .insert({
+        user_id: userId,
+        date: selectedDate,
+        meal_type: mealType,
+        item_type: itemType,
+        recipe_id: itemType === "recipe" ? Number(selectedItemId) : null,
+        ingredient_id: itemType === "ingredient" ? Number(selectedItemId) : null,
+        amount: itemAmount,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
+    const savedItem = data as MealPlanRow;
 
     setPlanItems([
       ...planItems,
       {
-        id: Date.now(),
-        date: selectedDate,
-        mealType,
-        itemType,
-        itemId: Number(selectedItemId),
-        amount: Number(amount) || 1,
+        id: savedItem.id,
+        date: savedItem.date,
+        mealType: savedItem.meal_type,
+        itemType: savedItem.item_type,
+        itemId:
+          savedItem.item_type === "recipe"
+            ? Number(savedItem.recipe_id)
+            : Number(savedItem.ingredient_id),
+        amount: Number(savedItem.amount),
       },
     ]);
 
@@ -170,7 +298,17 @@ export default function MealPlanPage() {
     setAmount("1");
   };
 
-  const deleteMealItem = (id: number) => {
+  const deleteMealItem = async (id: number) => {
+    const { error } = await supabase
+      .from("meal_plan_items")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      alert(error.message);
+      return;
+    }
+
     setPlanItems((currentItems) =>
       currentItems.filter((item) => item.id !== id)
     );
@@ -188,19 +326,7 @@ export default function MealPlanPage() {
 
   return (
     <main className="mx-auto max-w-6xl p-6">
-      <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-          weekly planner
-        </p>
-
-        <h1 className="mt-2 text-5xl font-black text-pink-500">
-          Meal Plan ♡
-        </h1>
-
-        <p className="mt-3 text-rose-700">
-          Plan meals for the next 7 days with recipes or single ingredients.
-        </p>
-      </section>
+      
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
@@ -331,6 +457,7 @@ export default function MealPlanPage() {
           })}
         </div>
       </section>
+
       <section className="mt-8 flex items-center justify-between rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
         <button
           onClick={() => setWeekOffset((current) => current - 1)}
@@ -353,16 +480,17 @@ export default function MealPlanPage() {
           <ChevronRight size={22} />
         </button>
       </section>
+
       <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
         {weekDays.map((day) => (
           <button
             key={day.date}
             onClick={() => setSelectedDate(day.date)}
             className={`rounded-2xl border p-4 text-left transition ${selectedDate === day.date
-              ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
-              : day.date === today
-                ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
-                : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
+                ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                : day.date === today
+                  ? "border-pink-300 bg-pink-100 text-rose-800 shadow-sm"
+                  : "border-pink-100 bg-white text-rose-700 hover:bg-pink-50"
               }`}
           >
             <p className="text-sm font-black">{day.shortLabel}</p>
