@@ -1,8 +1,32 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { notFound } from "next/navigation";
-import { recipes } from "@/data/recipes";
-import { ingredients } from "@/data/ingredients";
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
+
+type Ingredient = {
+    id: number;
+    name: string;
+    emoji: string;
+    unit: "g" | "pcs";
+    calories: number;
+    protein: number;
+    cost: number;
+};
+
+type RecipeIngredient = {
+    amount: number;
+    ingredients: Ingredient | null;
+};
+
+type Recipe = {
+    id: number;
+    name: string;
+    servings: number;
+    instructions: string | null;
+    recipe_ingredients: RecipeIngredient[];
+};
 
 type RecipeDetailsPageProps = {
     params: Promise<{
@@ -10,39 +34,78 @@ type RecipeDetailsPageProps = {
     }>;
 };
 
-export default async function RecipeDetailsPage({
-    params,
-}: RecipeDetailsPageProps) {
-    const { slug } = await params;
+export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
+    const [recipe, setRecipe] = useState<Recipe | null>(null);
+    const [recipeId, setRecipeId] = useState<string>("");
 
-    const recipe = recipes.find((item) => item.slug === slug);
+    useEffect(() => {
+        const getParams = async () => {
+            const resolvedParams = await params;
+            setRecipeId(resolvedParams.slug);
+        };
+
+        getParams();
+    }, [params]);
+
+    useEffect(() => {
+        if (!recipeId) return;
+
+        const fetchRecipe = async () => {
+            const { data, error } = await supabase
+                .from("recipes")
+                .select(
+                    `
+          id,
+          name,
+          servings,
+          instructions,
+          recipe_ingredients (
+            amount,
+            ingredients (
+              id,
+              name,
+              emoji,
+              unit,
+              calories,
+              protein,
+              cost
+            )
+          )
+        `
+                )
+                .eq("id", Number(recipeId))
+                .single();
+
+            if (error) {
+                alert(error.message);
+                return;
+            }
+
+            setRecipe(data as Recipe);
+        };
+
+        fetchRecipe();
+    }, [recipeId]);
 
     if (!recipe) {
-        notFound();
+        return (
+            <main className="mx-auto max-w-6xl p-6">
+                <p className="text-pink-500 font-black">Loading recipe ♡</p>
+            </main>
+        );
     }
 
-    const recipeIngredients = recipe.ingredients.map((recipeIngredient) => {
-        const ingredient = ingredients.find(
-            (item) => item.id === recipeIngredient.ingredientId
-        );
-
-        return {
-            ...recipeIngredient,
-            ingredient,
-        };
-    });
-
-    const totals = recipeIngredients.reduce(
+    const totals = recipe.recipe_ingredients.reduce(
         (sum, item) => {
-            if (!item.ingredient) return sum;
+            if (!item.ingredients) return sum;
 
             const multiplier =
-                item.ingredient.unit === "g" ? item.amount / 100 : item.amount;
+                item.ingredients.unit === "g" ? item.amount / 100 : item.amount;
 
             return {
-                calories: sum.calories + item.ingredient.calories * multiplier,
-                protein: sum.protein + item.ingredient.protein * multiplier,
-                cost: sum.cost + item.ingredient.cost * multiplier,
+                calories: sum.calories + item.ingredients.calories * multiplier,
+                protein: sum.protein + item.ingredients.protein * multiplier,
+                cost: sum.cost + item.ingredients.cost * multiplier,
             };
         },
         { calories: 0, protein: 0, cost: 0 }
@@ -65,9 +128,7 @@ export default async function RecipeDetailsPage({
             </Link>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
-
-
-                <h1 className="mt-4 text-5xl font-black text-pink-500">
+                <h1 className="text-5xl font-black text-pink-500">
                     {recipe.name} ♡
                 </h1>
 
@@ -82,38 +143,44 @@ export default async function RecipeDetailsPage({
                         </h2>
 
                         <div className="mt-5 space-y-3">
-                            {recipeIngredients.map((item) => (
-                                <div
-                                    key={item.ingredientId}
-                                    className="flex items-center justify-between rounded-2xl bg-pink-50 p-4"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <span className="text-2xl">
-                                            {item.ingredient?.emoji ?? "🛒"}
-                                        </span>
+                            {recipe.recipe_ingredients.map((item, index) => {
+                                if (!item.ingredients) return null;
 
-                                        <p className="font-black text-rose-950">
-                                            {item.ingredient?.name ?? "Unknown ingredient"}
-                                        </p>
-                                    </div>
+                                const multiplier =
+                                    item.ingredients.unit === "g"
+                                        ? item.amount / 100
+                                        : item.amount;
 
-                                    <div className="text-right">
+                                const ingredientCost = item.ingredients.cost * multiplier;
+
+                                return (
+                                    <div
+                                        key={index}
+                                        className="flex items-center justify-between rounded-2xl bg-pink-50 p-4"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-2xl">
+                                                {item.ingredients.emoji}
+                                            </span>
+
+                                            <div>
+                                                <p className="font-black text-rose-950">
+                                                    {item.ingredients.name}
+                                                </p>
+
+                                                <p className="text-sm font-semibold text-rose-500">
+                                                    {ingredientCost.toFixed(2)} €
+                                                </p>
+                                            </div>
+                                        </div>
+
                                         <p className="font-bold text-rose-500">
-                                            {item.amount} {item.ingredient?.unit === "pcs" ? "pcs" : "g"}
+                                            {item.amount}{" "}
+                                            {item.ingredients.unit === "pcs" ? "pcs" : "g"}
                                         </p>
-
-                                        {item.ingredient && (
-                                            <p className="text-sm font-semibold text-pink-400">
-                                                {(
-                                                    item.ingredient.cost *
-                                                    (item.ingredient.unit === "g" ? item.amount / 100 : item.amount)
-                                                ).toFixed(2)}{" "}
-                                                €
-                                            </p>
-                                        )}
                                     </div>
-                                </div>
-                            ))}
+                                );
+                            })}
                         </div>
                     </section>
 
@@ -122,19 +189,15 @@ export default async function RecipeDetailsPage({
                             Instructions
                         </h2>
 
-                        <ol className="mt-5 space-y-3">
-                            {recipe.instructions.map((step, index) => (
-                                <li
-                                    key={step}
-                                    className="rounded-2xl bg-rose-50/70 p-4 font-semibold text-rose-800"
-                                >
-                                    <span className="mr-2 font-black text-pink-500">
-                                        {index + 1}.
-                                    </span>
-                                    {step}
-                                </li>
-                            ))}
-                        </ol>
+                        {recipe.instructions ? (
+                            <p className="mt-5 whitespace-pre-line rounded-2xl bg-rose-50/70 p-4 font-semibold text-rose-800">
+                                {recipe.instructions}
+                            </p>
+                        ) : (
+                            <p className="mt-5 rounded-2xl bg-rose-50/70 p-4 font-semibold text-rose-400">
+                                No instructions added yet.
+                            </p>
+                        )}
                     </section>
                 </div>
 
@@ -148,6 +211,7 @@ export default async function RecipeDetailsPage({
                             <p className="text-xs font-bold uppercase text-orange-400">
                                 Calories / serving
                             </p>
+
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {Math.round(perServing.calories)} kcal
                             </p>
@@ -157,6 +221,7 @@ export default async function RecipeDetailsPage({
                             <p className="text-xs font-bold uppercase text-purple-400">
                                 Protein / serving
                             </p>
+
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {perServing.protein.toFixed(1)} g
                             </p>
@@ -166,8 +231,21 @@ export default async function RecipeDetailsPage({
                             <p className="text-xs font-bold uppercase text-pink-400">
                                 Cost / serving
                             </p>
+
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {perServing.cost.toFixed(2)} €
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl border border-pink-100 bg-rose-50/60 p-4">
+                            <p className="text-xs font-bold uppercase text-pink-400">
+                                Total recipe
+                            </p>
+
+                            <p className="mt-1 text-sm font-bold text-rose-700">
+                                {Math.round(totals.calories)} kcal ·{" "}
+                                {totals.protein.toFixed(1)} g protein ·{" "}
+                                {totals.cost.toFixed(2)} €
                             </p>
                         </div>
                     </div>

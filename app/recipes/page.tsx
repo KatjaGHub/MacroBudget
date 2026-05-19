@@ -1,47 +1,85 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import ScrollToTop from "@/components/ScrollToTop";
-import { recipes } from "@/data/recipes";
-import { ingredients } from "@/data/ingredients";
 import { Plus, Trash2 } from "lucide-react";
+import ScrollToTop from "@/components/ScrollToTop";
+import { supabase } from "@/lib/supabase";
+
+type Ingredient = {
+    id: number;
+    name: string;
+    unit: "g" | "pcs";
+    calories: number;
+    protein: number;
+    cost: number;
+};
+
+type RecipeIngredient = {
+    amount: number;
+    ingredients: Ingredient | null;
+};
+
+type Recipe = {
+    id: number;
+    name: string;
+    servings: number;
+    instructions: string | null;
+    recipe_ingredients: RecipeIngredient[];
+};
 
 export default function RecipesPage() {
     const [search, setSearch] = useState("");
-    const handleDeleteRecipe = (recipeName: string) => {
-        const confirmed = window.confirm(
-            `Are you sure you want to delete "${recipeName}"?`
-        );
+    const [recipes, setRecipes] = useState<Recipe[]>([]);
 
-        if (!confirmed) return;
+    useEffect(() => {
+        const fetchRecipes = async () => {
+            const { data, error } = await supabase
+                .from("recipes")
+                .select(
+                    `
+          id,
+          name,
+          servings,
+          instructions,
+          recipe_ingredients (
+            amount,
+            ingredients (
+              id,
+              name,
+              unit,
+              calories,
+              protein,
+              cost
+            )
+          )
+        `
+                )
+                .order("name", { ascending: true });
 
-        alert("Later this will delete from Supabase ♡");
-    };
+            if (error) {
+                alert(error.message);
+                return;
+            }
+
+            setRecipes((data ?? []) as Recipe[]);
+        };
+
+        fetchRecipes();
+    }, []);
 
     const recipesWithDetails = recipes.map((recipe) => {
-        const recipeIngredients = recipe.ingredients.map((recipeIngredient) => {
-            const ingredient = ingredients.find(
-                (item) => item.id === recipeIngredient.ingredientId
-            );
-
-            return {
-                ...recipeIngredient,
-                ingredient,
-            };
-        });
-
-        const totals = recipeIngredients.reduce(
+        const totals = recipe.recipe_ingredients.reduce(
             (sum, item) => {
-                if (!item.ingredient) return sum;
+                if (!item.ingredients) return sum;
 
                 const multiplier =
-                    item.ingredient.unit === "g" ? item.amount / 100 : item.amount;
+                    item.ingredients.unit === "g" ? item.amount / 100 : item.amount;
 
                 return {
-                    calories: sum.calories + item.ingredient.calories * multiplier,
-                    protein: sum.protein + item.ingredient.protein * multiplier,
-                    cost: sum.cost + item.ingredient.cost * multiplier,
+                    calories: sum.calories + item.ingredients.calories * multiplier,
+                    protein: sum.protein + item.ingredients.protein * multiplier,
+                    cost: sum.cost + item.ingredients.cost * multiplier,
                 };
             },
             { calories: 0, protein: 0, cost: 0 }
@@ -49,8 +87,8 @@ export default function RecipesPage() {
 
         return {
             ...recipe,
-            ingredientNames: recipeIngredients.map(
-                (item) => item.ingredient?.name ?? "Unknown ingredient"
+            ingredientNames: recipe.recipe_ingredients.map(
+                (item) => item.ingredients?.name ?? "Unknown ingredient"
             ),
             calories: Math.round(totals.calories / recipe.servings),
             protein: totals.protein / recipe.servings,
@@ -69,6 +107,25 @@ export default function RecipesPage() {
             )
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [search, recipesWithDetails]);
+
+    const handleDeleteRecipe = async (recipeId: number, recipeName: string) => {
+        const confirmed = window.confirm(
+            `Are you sure you want to delete "${recipeName}"?`
+        );
+
+        if (!confirmed) return;
+
+        const { error } = await supabase.from("recipes").delete().eq("id", recipeId);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        setRecipes((currentRecipes) =>
+            currentRecipes.filter((recipe) => recipe.id !== recipeId)
+        );
+    };
 
     const letters = Array.from(
         new Set(filteredRecipes.map((recipe) => recipe.name[0].toUpperCase()))
@@ -140,7 +197,7 @@ export default function RecipesPage() {
                         <div className="grid gap-6 md:grid-cols-2">
                             {group.items.map((recipe) => (
                                 <article
-                                    key={recipe.name}
+                                    key={recipe.id}
                                     className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.18)]"
                                 >
                                     <div className="flex items-start justify-between gap-4">
@@ -156,14 +213,17 @@ export default function RecipesPage() {
 
                                         <div className="flex items-center gap-2">
                                             <button
-                                                onClick={() => handleDeleteRecipe(recipe.name)}
+                                                onClick={() =>
+                                                    handleDeleteRecipe(recipe.id, recipe.name)
+                                                }
                                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
+                                                aria-label={`Delete ${recipe.name}`}
                                             >
                                                 <Trash2 size={18} />
                                             </button>
 
                                             <Link
-                                                href={`/recipes/${recipe.slug}`}
+                                                href={`/recipes/${recipe.id}`}
                                                 className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
                                             >
                                                 View ♡
