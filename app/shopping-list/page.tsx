@@ -9,6 +9,7 @@ type ShoppingItem = {
     name: string;
     quantity: string | null;
     is_checked: boolean;
+    added_by: string | null;
 };
 
 export default function ShoppingListPage() {
@@ -16,6 +17,7 @@ export default function ShoppingListPage() {
     const [newItem, setNewItem] = useState("");
     const [newQuantity, setNewQuantity] = useState("");
     const [householdId, setHouseholdId] = useState<number | null>(null);
+    const [userId, setUserId] = useState("");
 
     useEffect(() => {
         let isMounted = true;
@@ -24,6 +26,7 @@ export default function ShoppingListPage() {
         const fetchShoppingItems = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
             const userId = sessionData.session?.user.id;
+            setUserId(userId ?? "");
 
             if (!userId) return;
 
@@ -49,7 +52,7 @@ export default function ShoppingListPage() {
             const loadItems = async () => {
                 const { data, error } = await supabase
                     .from("shopping_items")
-                    .select("*")
+                    .select("id, name, quantity, is_checked, added_by")
                     .eq("household_id", currentHouseholdId)
                     .order("created_at", { ascending: false });
 
@@ -240,10 +243,13 @@ export default function ShoppingListPage() {
                                 </p>
 
                                 {item.quantity && (
-                                    <p className="text-sm font-medium text-rose-400">
+                                    <p className="text-sm font-medium text-rose-700">
                                         {item.quantity}
                                     </p>
                                 )}
+                                <p className="text-xs font-bold text-rose-300">
+                                    added by {item.added_by === userId ? "you" : "your household"}
+                                </p>
                             </button>
 
                             <button
