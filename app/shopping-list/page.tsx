@@ -106,10 +106,14 @@ export default function ShoppingListPage() {
             return;
         }
 
+        const { data: sessionData } = await supabase.auth.getSession();
+        const userId = sessionData.session?.user.id;
+
         const { data, error } = await supabase
             .from("shopping_items")
             .insert({
                 household_id: householdId,
+                added_by: userId,
                 name: newItem.trim(),
                 quantity: newQuantity.trim() || null,
                 is_checked: false,
