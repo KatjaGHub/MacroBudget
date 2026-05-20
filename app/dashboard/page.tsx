@@ -63,7 +63,8 @@ type WeightLog = {
     date: string;
     weight: number;
     user_id: string;
-    profiles?: {
+    profiles: {
+        id: string;
         full_name: string;
     } | null;
 };
@@ -99,11 +100,12 @@ export default function DashboardPage() {
 
         const { data: profileData } = await supabase
             .from("profiles")
-            .select("full_name")
+            .select("full_name, height_cm")
             .eq("id", currentUserId)
-            .single();
+            .maybeSingle();
 
         setName(profileData?.full_name ?? "there");
+        setHeightCm(profileData?.height_cm ? String(profileData.height_cm) : "");
 
         const currentHouseholdId = await getHouseholdId();
 
@@ -183,21 +185,38 @@ export default function DashboardPage() {
                 null,
         }));
 
-        const { data: weightData } = await supabase
+        const { data: weightData, error: weightError } = await supabase
             .from("weight_logs")
-            .select(
-                `
-        id,
-        date,
-        weight,
-        user_id,
-        profiles (
-          full_name
-        )
-      `
-            )
+            .select("id, date, weight, user_id")
             .eq("household_id", currentHouseholdId)
-            .order("date", { ascending: true });
+            .order("date", { ascending: true })
+            .order("created_at", { ascending: true });
+
+        if (weightError) {
+            alert(weightError.message);
+            return;
+        }
+
+        const weightUserIds = Array.from(
+            new Set((weightData ?? []).map((log) => log.user_id).filter(Boolean))
+        ) as string[];
+
+        let weightProfiles: { id: string; full_name: string }[] = [];
+
+        if (weightUserIds.length > 0) {
+            const { data: profilesData } = await supabase
+                .from("profiles")
+                .select("id, full_name")
+                .in("id", weightUserIds);
+
+            weightProfiles = profilesData ?? [];
+        }
+
+        const weightLogsWithProfiles = (weightData ?? []).map((log) => ({
+            ...log,
+            profiles:
+                weightProfiles.find((profile) => profile.id === log.user_id) ?? null,
+        }));
 
         const ingredients = (ingredientsData ?? []) as Ingredient[];
         const recipes = (recipesData ?? []) as Recipe[];
@@ -267,14 +286,11 @@ export default function DashboardPage() {
         setWeeklyMeals(calculatedMeals);
         setTodayMeals(calculatedMeals.filter((meal) => meal.date === today));
         setShoppingItems(shoppingItemsWithProfiles as ShoppingItem[]);
-        setWeightLogs((weightData ?? []) as WeightLog[]);
+        setWeightLogs(weightLogsWithProfiles as WeightLog[]);
     };
 
     useEffect(() => {
         loadDashboard();
-
-        const savedHeight = localStorage.getItem("macrobudget-height-cm");
-        if (savedHeight) setHeightCm(savedHeight);
     }, []);
 
     const todayCalories = todayMeals.reduce(
@@ -296,6 +312,19 @@ export default function DashboardPage() {
         return latestWeight / (heightMeters * heightMeters);
     }, [heightCm, latestWeight]);
 
+    const bmiLabel = !bmi
+        ? "Add height in settings"
+        : bmi < 18.5
+            ? "Underweight"
+            : bmi < 25
+                ? "Normal range"
+                : bmi < 30
+                    ? "Overweight"
+                    : "Obese";
+
+    const weightChange =
+        myWeightLogs.length >= 2 ? latestWeight - myWeightLogs[0].weight : 0;
+
     const saveWeight = async () => {
         if (!householdId || !userId || !newWeight) return;
 
@@ -315,26 +344,56 @@ export default function DashboardPage() {
         loadDashboard();
     };
 
-    const saveHeight = (value: string) => {
-        setHeightCm(value);
-        localStorage.setItem("macrobudget-height-cm", value);
+    const userColors = [
+        "#ec4899",
+        "#3b82f6",
+        "#a855f7",
+        "#f97316",
+        "#10b981",
+        "#ef4444",
+        "#14b8a6",
+    ];
+
+    const weightUsers = Array.from(
+        new Map(
+            weightLogs.map((log) => [
+                log.user_id,
+                {
+                    id: log.user_id,
+                    name:
+                        log.user_id === userId
+                            ? name || "You"
+                            : log.profiles?.full_name ?? "User",
+                },
+            ])
+        ).values()
+    );
+
+    const allWeights = weightLogs.map((log) => log.weight);
+    const minWeight = allWeights.length > 0 ? Math.min(...allWeights) : 0;
+    const maxWeight = allWeights.length > 0 ? Math.max(...allWeights) : 1;
+    const graphRange = Math.max(maxWeight - minWeight, 1);
+    const graphWidth = 300;
+
+    const getUserLogs = (selectedUserId: string) =>
+        weightLogs.filter((log) => log.user_id === selectedUserId).slice(-8);
+
+    const getPoint = (logs: WeightLog[], log: WeightLog, index: number) => {
+        const x =
+            logs.length === 1 ? graphWidth / 2 : (index / (logs.length - 1)) * graphWidth;
+
+        const y = 120 - ((log.weight - minWeight) / graphRange) * 100;
+
+        return { x, y };
     };
 
-    const graphPoints = myWeightLogs.slice(-8);
-    const minWeight = Math.min(...graphPoints.map((item) => item.weight), 0);
-    const maxWeight = Math.max(...graphPoints.map((item) => item.weight), 1);
-
-    const points = graphPoints
-        .map((item, index) => {
-            const x =
-                graphPoints.length === 1 ? 150 : (index / (graphPoints.length - 1)) * 300;
-            const y =
-                120 -
-                ((item.weight - minWeight) / Math.max(maxWeight - minWeight, 1)) * 100;
-
-            return `${x},${y}`;
-        })
-        .join(" ");
+    const getPoints = (logs: WeightLog[]) =>
+        logs
+            .map((log, index) => {
+                const point = getPoint(logs, log, index);
+                return `${point.x},${point.y}`;
+            })
+            .join(" ");
 
     return (
         <main className="mx-auto max-w-6xl p-6">
@@ -460,16 +519,19 @@ export default function DashboardPage() {
                             shoppingItems.slice(0, 6).map((item) => (
                                 <div key={item.id} className="rounded-2xl bg-rose-50 p-4">
                                     <div className="flex justify-between gap-3">
-                                        <p className="font-black text-rose-950">{item.name}</p>
+                                        <p className="font-black text-rose-950 ">{item.name}</p>
                                         {item.quantity && (
-                                            <p className="text-sm font-bold text-rose-400">
+                                            <p className="text-xl font-bold text-rose-700 ">
                                                 {item.quantity}
                                             </p>
                                         )}
                                     </div>
 
                                     <p className="mt-1 text-xs font-bold text-rose-400">
-                                        added by {item.added_by === userId ? "you" : item.profiles?.full_name ?? "Someone"}
+                                        added by{" "}
+                                        {item.added_by === userId
+                                            ? "you"
+                                            : item.profiles?.full_name ?? "Someone"}
                                     </p>
                                 </div>
                             ))
@@ -502,14 +564,6 @@ export default function DashboardPage() {
                             className="rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                         />
 
-                        <input
-                            type="number"
-                            value={heightCm}
-                            onChange={(event) => saveHeight(event.target.value)}
-                            placeholder="Height cm"
-                            className="rounded-2xl bg-purple-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
-                        />
-
                         <button
                             onClick={saveWeight}
                             className="rounded-full bg-pink-500 px-5 py-3 font-black text-white transition hover:bg-pink-600"
@@ -523,41 +577,119 @@ export default function DashboardPage() {
                         <p className="mt-1 text-2xl font-black text-rose-950">
                             {bmi ? bmi.toFixed(1) : "—"}
                         </p>
+                        <p className="mt-1 text-sm font-bold text-rose-500">{bmiLabel}</p>
                     </div>
+
+                    {!heightCm && (
+                        <a
+                            href="/settings"
+                            className="mt-3 block rounded-2xl bg-purple-50 p-4 text-sm font-bold text-purple-500"
+                        >
+                            For more fitness stats, update your information in settings ♡
+                        </a>
+                    )}
                 </div>
 
                 <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                     <h2 className="text-3xl font-black text-pink-500">
-                        Weight progress ♡
+                        Household weight progress ♡
                     </h2>
 
                     <div className="mt-5 rounded-2xl bg-pink-50 p-4">
-                        {graphPoints.length < 2 ? (
+                        {weightLogs.length < 2 ? (
                             <p className="font-semibold text-rose-400">
-                                Log at least 2 weights to see progress.
+                                Log at least 2 weights to see household progress.
                             </p>
                         ) : (
-                            <svg viewBox="0 0 300 130" className="h-48 w-full">
-                                <polyline
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    points={points}
-                                    className="text-pink-500"
-                                />
-                            </svg>
+                            <>
+                                <svg viewBox="0 0 300 130" className="h-48 w-full">
+                                    {weightUsers.map((user, userIndex) => {
+                                        const logs = getUserLogs(user.id);
+                                        const color = userColors[userIndex % userColors.length];
+
+                                        if (logs.length < 2) return null;
+
+                                        return (
+                                            <g key={user.id}>
+                                                <polyline
+                                                    fill="none"
+                                                    stroke={color}
+                                                    strokeWidth="5"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    points={getPoints(logs)}
+                                                />
+
+                                                {logs.map((log, index) => {
+                                                    const point = getPoint(logs, log, index);
+
+                                                    return (
+                                                        <circle
+                                                            key={log.id}
+                                                            cx={point.x}
+                                                            cy={point.y}
+                                                            r="5"
+                                                            fill={color}
+                                                        />
+                                                    );
+                                                })}
+                                            </g>
+                                        );
+                                    })}
+                                </svg>
+
+                                <div className="mt-4 flex flex-wrap gap-3">
+                                    {weightUsers.map((user, index) => (
+                                        <div
+                                            key={user.id}
+                                            className="flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-black text-rose-700"
+                                        >
+                                            <span
+                                                className="h-3 w-3 rounded-full"
+                                                style={{
+                                                    backgroundColor:
+                                                        userColors[index % userColors.length],
+                                                }}
+                                            />
+                                            {user.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            </>
                         )}
                     </div>
 
+                    <div className="mt-5 grid gap-3 md:grid-cols-2">
+                        <div className="rounded-2xl bg-pink-50 p-4">
+                            <p className="text-xs font-bold uppercase text-pink-400">
+                                Latest weight
+                            </p>
+                            <p className="mt-1 text-2xl font-black text-rose-950">
+                                {latestWeight ? `${latestWeight} kg` : "—"}
+                            </p>
+                        </div>
+
+                        <div className="rounded-2xl bg-purple-50 p-4">
+                            <p className="text-xs font-bold uppercase text-purple-400">
+                                Change
+                            </p>
+                            <p className="mt-1 text-2xl font-black text-rose-950">
+                                {myWeightLogs.length >= 2
+                                    ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(
+                                        1
+                                    )} kg`
+                                    : "—"}
+                            </p>
+                        </div>
+                    </div>
+
                     <div className="mt-5 space-y-2">
-                        {weightLogs.slice(-5).map((log) => (
+                        {myWeightLogs.slice(-5).map((log) => (
                             <div
                                 key={log.id}
                                 className="flex justify-between rounded-2xl bg-purple-50 p-3 text-sm font-bold text-rose-700"
                             >
-                                <span>{log.profiles?.full_name ?? "Someone"}</span>
+                                <span>{log.profiles?.full_name ?? name ?? "You"}</span>
                                 <span>
                                     {log.weight} kg · {log.date}
                                 </span>
