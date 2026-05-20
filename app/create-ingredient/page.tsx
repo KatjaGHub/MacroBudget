@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getHouseholdId } from "@/lib/getHouseholdId";
 
 const ingredientTypes = [
   { emoji: "🍗", label: "Protein" },
@@ -36,22 +37,6 @@ export default function CreateIngredientPage() {
     return price / amount;
   }, [packageAmount, packagePrice, unit]);
 
-  const getHouseholdId = async () => {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const userId = sessionData.session?.user.id;
-
-    if (!userId) return null;
-
-    const { data } = await supabase
-      .from("household_members")
-      .select("household_id")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .single();
-
-    return data?.household_id ?? null;
-  };
 
   return (
     <main className="mx-auto max-w-6xl p-6">

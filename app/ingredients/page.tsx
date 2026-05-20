@@ -5,6 +5,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import { supabase } from "@/lib/supabase";
+import { getHouseholdId } from "@/lib/getHouseholdId";
 
 type Ingredient = {
     id: number;
@@ -48,9 +49,17 @@ export default function IngredientsPage() {
 
     useEffect(() => {
         const fetchIngredients = async () => {
+            const householdId = await getHouseholdId();
+
+            if (!householdId) {
+                alert("No household found.");
+                return;
+            }
+
             const { data, error } = await supabase
                 .from("ingredients")
                 .select("*")
+                .eq("household_id", householdId)
                 .order("name", { ascending: true });
 
             if (error) {

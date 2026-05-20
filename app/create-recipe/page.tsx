@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { getHouseholdId } from "@/lib/getHouseholdId";
 
 type RecipeIngredient = {
     id: number;
@@ -35,9 +36,17 @@ export default function CreateRecipePage() {
 
     useEffect(() => {
         const fetchIngredients = async () => {
+            const householdId = await getHouseholdId();
+
+            if (!householdId) {
+                alert("No household found.");
+                return;
+            }
+
             const { data, error } = await supabase
                 .from("ingredients")
                 .select("id, name, unit, calories, protein, cost")
+                .eq("household_id", householdId)
                 .order("name", { ascending: true });
 
             if (error) {
@@ -172,23 +181,6 @@ export default function CreateRecipePage() {
         }
 
         window.location.href = "/recipes";
-    };
-
-    const getHouseholdId = async () => {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData.session?.user.id;
-
-        if (!userId) return null;
-
-        const { data } = await supabase
-            .from("household_members")
-            .select("household_id")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-
-        return data?.household_id ?? null;
     };
 
     return (
