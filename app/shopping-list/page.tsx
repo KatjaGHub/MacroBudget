@@ -10,6 +10,15 @@ type ShoppingItem = {
     quantity: string | null;
     is_checked: boolean;
     added_by: string | null;
+    profiles: {
+        id: string;
+        full_name: string;
+    } | null;
+};
+
+type Profile = {
+    id: string;
+    full_name: string;
 };
 
 export default function ShoppingListPage() {
@@ -25,15 +34,16 @@ export default function ShoppingListPage() {
 
         const fetchShoppingItems = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
-            const userId = sessionData.session?.user.id;
-            setUserId(userId ?? "");
+            const currentUserId = sessionData.session?.user.id;
 
-            if (!userId) return;
+            setUserId(currentUserId ?? "");
+
+            if (!currentUserId) return;
 
             const { data: membershipData, error: membershipError } = await supabase
                 .from("household_members")
                 .select("household_id")
-                .eq("user_id", userId)
+                .eq("user_id", currentUserId)
                 .order("created_at", { ascending: false })
                 .limit(1)
                 .single();
@@ -61,8 +71,30 @@ export default function ShoppingListPage() {
                     return;
                 }
 
+                const addedByIds = Array.from(
+                    new Set((data ?? []).map((item) => item.added_by).filter(Boolean))
+                ) as string[];
+
+                let profilesData: Profile[] = [];
+
+                if (addedByIds.length > 0) {
+                    const { data: profiles } = await supabase
+                        .from("profiles")
+                        .select("id, full_name")
+                        .in("id", addedByIds);
+
+                    profilesData = (profiles ?? []) as Profile[];
+                }
+
+                const itemsWithProfiles = (data ?? []).map((item) => ({
+                    ...item,
+                    profiles:
+                        profilesData.find((profile) => profile.id === item.added_by) ??
+                        null,
+                }));
+
                 if (isMounted) {
-                    setItems((data ?? []) as ShoppingItem[]);
+                    setItems(itemsWithProfiles as ShoppingItem[]);
                 }
             };
 
@@ -94,9 +126,7 @@ export default function ShoppingListPage() {
             isMounted = false;
 
             if (channelName) {
-                supabase.removeChannel(
-                    supabase.channel(channelName)
-                );
+                supabase.removeChannel(supabase.channel(channelName));
             }
         };
     }, []);
@@ -110,18 +140,23 @@ export default function ShoppingListPage() {
         }
 
         const { data: sessionData } = await supabase.auth.getSession();
-        const userId = sessionData.session?.user.id;
+        const currentUserId = sessionData.session?.user.id;
+
+        if (!currentUserId) {
+            alert("You need to be logged in.");
+            return;
+        }
 
         const { data, error } = await supabase
             .from("shopping_items")
             .insert({
                 household_id: householdId,
-                added_by: userId,
+                added_by: currentUserId,
                 name: newItem.trim(),
                 quantity: newQuantity.trim() || null,
                 is_checked: false,
             })
-            .select()
+            .select("id, name, quantity, is_checked, added_by")
             .single();
 
         if (error) {
@@ -129,7 +164,17 @@ export default function ShoppingListPage() {
             return;
         }
 
-        setItems([data as ShoppingItem, ...items]);
+        setItems([
+            {
+                ...(data as Omit<ShoppingItem, "profiles">),
+                profiles: {
+                    id: currentUserId,
+                    full_name: "you",
+                },
+            },
+            ...items,
+        ]);
+
         setNewItem("");
         setNewQuantity("");
     };
@@ -168,6 +213,11 @@ export default function ShoppingListPage() {
         }
 
         setItems((currentItems) => currentItems.filter((item) => item.id !== id));
+    };
+
+    const getAddedByText = (item: ShoppingItem) => {
+        if (item.added_by === userId) return "you";
+        return item.profiles?.full_name ?? "Someone";
     };
 
     const toBuyItems = items.filter((item) => !item.is_checked);
@@ -247,8 +297,9 @@ export default function ShoppingListPage() {
                                         {item.quantity}
                                     </p>
                                 )}
+
                                 <p className="text-xs font-bold text-rose-300">
-                                    added by {item.added_by === userId ? "you" : "your household"}
+                                    added by {getAddedByText(item)}
                                 </p>
                             </button>
 
@@ -296,6 +347,10 @@ export default function ShoppingListPage() {
                                                 {item.quantity}
                                             </p>
                                         )}
+
+                                        <p className="text-xs font-bold text-rose-300">
+                                            added by {getAddedByText(item)}
+                                        </p>
                                     </button>
 
                                     <button

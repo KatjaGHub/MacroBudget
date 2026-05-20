@@ -52,6 +52,10 @@ type ShoppingItem = {
     quantity: string | null;
     added_by: string | null;
     is_checked: boolean;
+    profiles: {
+        id: string;
+        full_name: string;
+    } | null;
 };
 
 type WeightLog = {
@@ -157,6 +161,28 @@ export default function DashboardPage() {
             return;
         }
 
+        const shoppingAddedByIds = Array.from(
+            new Set((shoppingData ?? []).map((item) => item.added_by).filter(Boolean))
+        ) as string[];
+
+        let shoppingProfiles: { id: string; full_name: string }[] = [];
+
+        if (shoppingAddedByIds.length > 0) {
+            const { data: profilesData } = await supabase
+                .from("profiles")
+                .select("id, full_name")
+                .in("id", shoppingAddedByIds);
+
+            shoppingProfiles = profilesData ?? [];
+        }
+
+        const shoppingItemsWithProfiles = (shoppingData ?? []).map((item) => ({
+            ...item,
+            profiles:
+                shoppingProfiles.find((profile) => profile.id === item.added_by) ??
+                null,
+        }));
+
         const { data: weightData } = await supabase
             .from("weight_logs")
             .select(
@@ -240,7 +266,7 @@ export default function DashboardPage() {
 
         setWeeklyMeals(calculatedMeals);
         setTodayMeals(calculatedMeals.filter((meal) => meal.date === today));
-        setShoppingItems((shoppingData ?? []) as ShoppingItem[]);
+        setShoppingItems(shoppingItemsWithProfiles as ShoppingItem[]);
         setWeightLogs((weightData ?? []) as WeightLog[]);
     };
 
@@ -443,7 +469,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     <p className="mt-1 text-xs font-bold text-rose-400">
-                                        added by {item.added_by === userId ? "you" : "your household"}
+                                        added by {item.added_by === userId ? "you" : item.profiles?.full_name ?? "Someone"}
                                     </p>
                                 </div>
                             ))
