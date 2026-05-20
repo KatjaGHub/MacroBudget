@@ -21,7 +21,7 @@ export default function LoginPage() {
                 return;
             }
 
-            window.location.href = "/";
+            window.location.href = "/dashboard";
             return;
         }
 
@@ -52,7 +52,7 @@ export default function LoginPage() {
             }
         }
 
-        window.location.href = "/household";
+        window.location.href = "/dashboard";
     };
 
     return (
@@ -77,8 +77,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("login")}
                         className={`rounded-full px-4 py-2 text-sm font-black transition ${mode === "login"
-                                ? "bg-pink-500 text-white shadow-sm"
-                                : "text-rose-500"
+                            ? "bg-pink-500 text-white shadow-sm"
+                            : "text-rose-500"
                             }`}
                     >
                         Login
@@ -88,8 +88,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("register")}
                         className={`rounded-full px-4 py-2 text-sm font-black transition ${mode === "register"
-                                ? "bg-pink-500 text-white shadow-sm"
-                                : "text-rose-500"
+                            ? "bg-pink-500 text-white shadow-sm"
+                            : "text-rose-500"
                             }`}
                     >
                         Register
