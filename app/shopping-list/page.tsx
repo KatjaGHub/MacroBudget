@@ -18,7 +18,8 @@ export default function ShoppingListPage() {
     const [householdId, setHouseholdId] = useState<number | null>(null);
 
     useEffect(() => {
-        let channel: ReturnType<typeof supabase.channel> | null = null;
+        let isMounted = true;
+        let channelName = "";
 
         const fetchShoppingItems = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
@@ -40,6 +41,9 @@ export default function ShoppingListPage() {
             }
 
             const currentHouseholdId = membershipData.household_id;
+
+            if (!isMounted) return;
+
             setHouseholdId(currentHouseholdId);
 
             const loadItems = async () => {
@@ -54,13 +58,17 @@ export default function ShoppingListPage() {
                     return;
                 }
 
-                setItems((data ?? []) as ShoppingItem[]);
+                if (isMounted) {
+                    setItems((data ?? []) as ShoppingItem[]);
+                }
             };
 
             await loadItems();
 
-            channel = supabase
-                .channel(`shopping-list-${currentHouseholdId}`)
+            channelName = `shopping-list-${currentHouseholdId}-${crypto.randomUUID()}`;
+
+            const realtimeChannel = supabase
+                .channel(channelName)
                 .on(
                     "postgres_changes",
                     {
@@ -72,15 +80,20 @@ export default function ShoppingListPage() {
                     () => {
                         loadItems();
                     }
-                )
-                .subscribe();
+                );
+
+            realtimeChannel.subscribe();
         };
 
         fetchShoppingItems();
 
         return () => {
-            if (channel) {
-                supabase.removeChannel(channel);
+            isMounted = false;
+
+            if (channelName) {
+                supabase.removeChannel(
+                    supabase.channel(channelName)
+                );
             }
         };
     }, []);
