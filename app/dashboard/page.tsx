@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { LineChart, Scale, ShoppingBag, Sparkles, Utensils } from "lucide-react";
+import { LineChart, Scale, Sparkles, Utensils } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -77,6 +77,23 @@ function formatDate(date: Date) {
     return `${year}-${month}-${day}`;
 }
 
+function calculateAge(birthDate: string) {
+    const birth = new Date(birthDate);
+    const today = new Date();
+
+    let age = today.getFullYear() - birth.getFullYear();
+    const monthDiff = today.getMonth() - birth.getMonth();
+
+    if (
+        monthDiff < 0 ||
+        (monthDiff === 0 && today.getDate() < birth.getDate())
+    ) {
+        age--;
+    }
+
+    return age;
+}
+
 export default function DashboardPage() {
     const [name, setName] = useState("");
     const [householdId, setHouseholdId] = useState<number | null>(null);
@@ -89,6 +106,8 @@ export default function DashboardPage() {
 
     const [newWeight, setNewWeight] = useState("");
     const [heightCm, setHeightCm] = useState("");
+    const [birthDate, setBirthDate] = useState("");
+    const [sex, setSex] = useState("");
 
     const loadDashboard = async () => {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -100,12 +119,14 @@ export default function DashboardPage() {
 
         const { data: profileData } = await supabase
             .from("profiles")
-            .select("full_name, height_cm")
+            .select("full_name, height_cm, birth_date, sex")
             .eq("id", currentUserId)
             .maybeSingle();
 
         setName(profileData?.full_name ?? "there");
         setHeightCm(profileData?.height_cm ? String(profileData.height_cm) : "");
+        setBirthDate(profileData?.birth_date ?? "");
+        setSex(profileData?.sex ?? "");
 
         const currentHouseholdId = await getHouseholdId();
 
@@ -303,6 +324,7 @@ export default function DashboardPage() {
 
     const myWeightLogs = weightLogs.filter((log) => log.user_id === userId);
     const latestWeight = myWeightLogs.at(-1)?.weight ?? 0;
+    const age = birthDate ? calculateAge(birthDate) : 0;
 
     const bmi = useMemo(() => {
         const height = Number(heightCm);
@@ -311,6 +333,25 @@ export default function DashboardPage() {
         const heightMeters = height / 100;
         return latestWeight / (heightMeters * heightMeters);
     }, [heightCm, latestWeight]);
+
+    const recommendedCalories = useMemo(() => {
+        const height = Number(heightCm);
+        const weight = Number(latestWeight);
+
+        if (!height || !weight || !age) return 0;
+
+        let bmr = 10 * weight + 6.25 * height - 5 * age - 78;
+
+        if (sex === "male") {
+            bmr = 10 * weight + 6.25 * height - 5 * age + 5;
+        }
+
+        if (sex === "female") {
+            bmr = 10 * weight + 6.25 * height - 5 * age - 161;
+        }
+
+        return Math.round(bmr * 1.2);
+    }, [heightCm, latestWeight, age, sex]);
 
     const bmiLabel = !bmi
         ? "Add height in settings"
@@ -380,7 +421,9 @@ export default function DashboardPage() {
 
     const getPoint = (logs: WeightLog[], log: WeightLog, index: number) => {
         const x =
-            logs.length === 1 ? graphWidth / 2 : (index / (logs.length - 1)) * graphWidth;
+            logs.length === 1
+                ? graphWidth / 2
+                : (index / (logs.length - 1)) * graphWidth;
 
         const y = 120 - ((log.weight - minWeight) / graphRange) * 100;
 
@@ -415,12 +458,12 @@ export default function DashboardPage() {
                 <div className="rounded-[2rem] bg-orange-50 p-6 shadow-sm">
                     <Utensils className="text-orange-400" />
                     <p className="mt-3 text-sm font-black uppercase text-orange-400">
-                        Today calories
+                        Calories
                     </p>
                     <p className="mt-2 text-4xl font-black text-rose-950">
                         {Math.round(todayCalories)}
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">kcal planned</p>
+                    <p className="text-sm font-semibold text-rose-500">planned today</p>
                 </div>
 
                 <div className="rounded-[2rem] bg-purple-50 p-6 shadow-sm">
@@ -443,19 +486,19 @@ export default function DashboardPage() {
                         {todayCost.toFixed(2)}€
                     </p>
                     <p className="text-sm font-semibold text-rose-500">
-                        weekly {weeklyCost.toFixed(2)}€
+                        estimated today
                     </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-rose-50 p-6 shadow-sm">
-                    <ShoppingBag className="text-rose-400" />
+                    <LineChart className="text-rose-400" />
                     <p className="mt-3 text-sm font-black uppercase text-rose-400">
-                        Shopping
+                        Weekly cost
                     </p>
                     <p className="mt-2 text-4xl font-black text-rose-950">
-                        {shoppingItems.length}
+                        {weeklyCost.toFixed(2)}€
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">items left</p>
+                    <p className="text-sm font-semibold text-rose-500">next 7 days</p>
                 </div>
             </section>
 
@@ -580,7 +623,19 @@ export default function DashboardPage() {
                         <p className="mt-1 text-sm font-bold text-rose-500">{bmiLabel}</p>
                     </div>
 
-                    {!heightCm && (
+                    <div className="mt-3 rounded-2xl bg-orange-50 p-4">
+                        <p className="text-xs font-bold uppercase text-orange-400">
+                            Recommended calories
+                        </p>
+                        <p className="mt-1 text-2xl font-black text-rose-950">
+                            {recommendedCalories ? `${recommendedCalories} kcal` : "—"}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-rose-500">
+                            estimated maintenance
+                        </p>
+                    </div>
+
+                    {(!heightCm || !birthDate || !sex) && (
                         <a
                             href="/settings"
                             className="mt-3 block rounded-2xl bg-purple-50 p-4 text-sm font-bold text-purple-500"
