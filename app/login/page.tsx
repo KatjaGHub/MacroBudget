@@ -77,8 +77,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("login")}
                         className={`rounded-full px-4 py-2 text-sm font-black transition ${mode === "login"
-                            ? "bg-pink-500 text-white shadow-sm"
-                            : "text-rose-500"
+                                ? "bg-pink-500 text-white shadow-sm"
+                                : "text-rose-500"
                             }`}
                     >
                         Login
@@ -88,8 +88,8 @@ export default function LoginPage() {
                         type="button"
                         onClick={() => setMode("register")}
                         className={`rounded-full px-4 py-2 text-sm font-black transition ${mode === "register"
-                            ? "bg-pink-500 text-white shadow-sm"
-                            : "text-rose-500"
+                                ? "bg-pink-500 text-white shadow-sm"
+                                : "text-rose-500"
                             }`}
                     >
                         Register
@@ -98,6 +98,9 @@ export default function LoginPage() {
 
                 {mode === "register" && (
                     <input
+                        type="text"
+                        name="name"
+                        autoComplete="name"
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
                         placeholder="Name"
@@ -106,14 +109,24 @@ export default function LoginPage() {
                 )}
 
                 <input
+                    type="email"
+                    name="email"
+                    autoComplete="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
                     placeholder="Email"
-                    className={`${mode === "register" ? "mt-4" : "mt-6"} w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-pink-500 outline-none placeholder:text-rose-300`}
+                    className={`${mode === "register" ? "mt-4" : "mt-6"
+                        } w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-pink-500 outline-none placeholder:text-rose-300`}
                 />
 
                 <input
                     type="password"
+                    name="password"
+                    autoComplete={
+                        mode === "login"
+                            ? "current-password"
+                            : "new-password"
+                    }
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="Password"
