@@ -38,6 +38,11 @@ export default function SettingsPage() {
     const [birthMonth, setBirthMonth] = useState("");
     const [birthYear, setBirthYear] = useState("");
 
+    const [calorieTargetMode, setCalorieTargetMode] = useState<"auto" | "manual">("auto");
+    const [calorieTarget, setCalorieTarget] = useState("");
+    const [proteinTarget, setProteinTarget] = useState("");
+    const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
+
     useEffect(() => {
         const fetchProfile = async () => {
             const { data: sessionData } = await supabase.auth.getSession();
@@ -47,13 +52,19 @@ export default function SettingsPage() {
 
             const { data } = await supabase
                 .from("profiles")
-                .select("full_name, height_cm, birth_date, sex")
+                .select(
+                    "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode"
+                )
                 .eq("id", userId)
                 .maybeSingle();
 
             setFullName(data?.full_name ?? "");
             setHeightCm(data?.height_cm ? String(data.height_cm) : "");
             setSex(data?.sex ?? "");
+            setCalorieTargetMode(data?.calorie_target_mode === "manual" ? "manual" : "auto");
+            setCalorieTarget(data?.calorie_target ? String(data.calorie_target) : "");
+            setProteinTarget(data?.protein_target ? String(data.protein_target) : "");
+            setProteinTargetMode(data?.protein_target_mode === "manual" ? "manual" : "auto");
 
             if (data?.birth_date) {
                 const [year, month, day] = data.birth_date.split("-");
@@ -83,6 +94,10 @@ export default function SettingsPage() {
             height_cm: heightCm ? Number(heightCm) : null,
             birth_date: birthDate,
             sex: sex || null,
+            calorie_target: calorieTarget ? Number(calorieTarget) : null,
+            protein_target: proteinTarget ? Number(proteinTarget) : null,
+            calorie_target_mode: calorieTargetMode,
+            protein_target_mode: proteinTargetMode,
         });
 
         if (error) {
@@ -205,6 +220,128 @@ export default function SettingsPage() {
                         <option value="male">Male</option>
                         <option value="other">Prefer not to say</option>
                     </select>
+                </div>
+            </section>
+
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <p className="text-2xl font-black text-pink-500">Goals ♡</p>
+
+                <p className="mt-1 text-sm font-semibold text-rose-500">
+                    Choose automatic calorie goals or set your own fixed target.
+                </p>
+
+                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                    <button
+                        type="button"
+                        onClick={() => setCalorieTargetMode("auto")}
+                        className={`rounded-2xl border px-5 py-4 text-left transition ${calorieTargetMode === "auto"
+                            ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                            : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                            }`}
+                    >
+                        <p className="font-black">Calculate for me</p>
+                        <p className="mt-1 text-sm font-semibold opacity-80">
+                            Updates with your latest logged weight
+                        </p>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setCalorieTargetMode("manual")}
+                        className={`rounded-2xl border px-5 py-4 text-left transition ${calorieTargetMode === "manual"
+                            ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                            : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                            }`}
+                    >
+                        <p className="font-black">Manual target</p>
+                        <p className="mt-1 text-sm font-semibold opacity-80">
+                            Keep the same daily calorie goal
+                        </p>
+                    </button>
+                </div>
+
+                <div className="mt-5">
+                    <label className="text-sm font-black uppercase tracking-wide text-pink-400">
+                        Daily calorie target:
+                    </label>
+
+                    <input
+                        type="number"
+                        value={calorieTarget}
+                        onChange={(event) => {
+                            setCalorieTarget(event.target.value);
+                            setCalorieTargetMode("manual");
+                        }}
+                        placeholder={
+                            calorieTargetMode === "auto"
+                                ? "Calculated automatically on dashboard"
+                                : "Example: 1800"
+                        }
+                        className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                    />
+
+                    {calorieTargetMode === "auto" && (
+                        <p className="mt-2 text-sm font-semibold text-rose-400">
+                            Auto mode uses your height, birth date, sex and latest weight log.
+                        </p>
+                    )}
+                </div>
+
+                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                    <button
+                        type="button"
+                        onClick={() => setProteinTargetMode("auto")}
+                        className={`rounded-2xl border px-5 py-4 text-left transition ${proteinTargetMode === "auto"
+                                ? "border-purple-400 bg-purple-500 text-white shadow-[0_10px_25px_rgba(168,85,247,0.3)]"
+                                : "border-purple-100 bg-purple-50 text-rose-700 hover:bg-purple-100"
+                            }`}
+                    >
+                        <p className="font-black">Calculate protein for me</p>
+                        <p className="mt-1 text-sm font-semibold opacity-80">
+                            Uses your latest weight × 1.6g
+                        </p>
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setProteinTargetMode("manual")}
+                        className={`rounded-2xl border px-5 py-4 text-left transition ${proteinTargetMode === "manual"
+                                ? "border-purple-400 bg-purple-500 text-white shadow-[0_10px_25px_rgba(168,85,247,0.3)]"
+                                : "border-purple-100 bg-purple-50 text-rose-700 hover:bg-purple-100"
+                            }`}
+                    >
+                        <p className="font-black">Manual protein target</p>
+                        <p className="mt-1 text-sm font-semibold opacity-80">
+                            Keep the same daily protein goal
+                        </p>
+                    </button>
+                </div>
+
+                <div className="mt-5">
+                    <label className="text-sm font-black uppercase tracking-wide text-purple-400">
+                        Protein target in g:
+                    </label>
+
+                    <input
+                        type="number"
+                        value={proteinTarget}
+                        onChange={(event) => {
+                            setProteinTarget(event.target.value);
+                            setProteinTargetMode("manual");
+                        }}
+                        placeholder={
+                            proteinTargetMode === "auto"
+                                ? "Calculated automatically on dashboard"
+                                : "Example: 120"
+                        }
+                        className="mt-2 w-full rounded-2xl bg-purple-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                    />
+
+                    {proteinTargetMode === "auto" && (
+                        <p className="mt-2 text-sm font-semibold text-rose-400">
+                            Auto mode uses your latest weight log and calculates 1.6g protein per kg.
+                        </p>
+                    )}
                 </div>
 
                 <button

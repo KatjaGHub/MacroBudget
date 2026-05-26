@@ -109,6 +109,11 @@ export default function DashboardPage() {
     const [birthDate, setBirthDate] = useState("");
     const [sex, setSex] = useState("");
 
+    const [calorieTarget, setCalorieTarget] = useState<number | null>(null);
+    const [proteinTarget, setProteinTarget] = useState<number | null>(null);
+    const [calorieTargetMode, setCalorieTargetMode] = useState<"auto" | "manual">("auto");
+    const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
+
     const loadDashboard = async () => {
         const { data: sessionData } = await supabase.auth.getSession();
         const currentUserId = sessionData.session?.user.id;
@@ -119,7 +124,9 @@ export default function DashboardPage() {
 
         const { data: profileData } = await supabase
             .from("profiles")
-            .select("full_name, height_cm, birth_date, sex")
+            .select(
+                "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode"
+            )
             .eq("id", currentUserId)
             .maybeSingle();
 
@@ -127,6 +134,10 @@ export default function DashboardPage() {
         setHeightCm(profileData?.height_cm ? String(profileData.height_cm) : "");
         setBirthDate(profileData?.birth_date ?? "");
         setSex(profileData?.sex ?? "");
+        setCalorieTarget(profileData?.calorie_target ?? null);
+        setProteinTarget(profileData?.protein_target ?? null);
+        setCalorieTargetMode(profileData?.calorie_target_mode === "manual" ? "manual" : "auto");
+        setProteinTargetMode(profileData?.protein_target_mode === "manual" ? "manual" : "auto");
 
         const currentHouseholdId = await getHouseholdId();
 
@@ -353,6 +364,33 @@ export default function DashboardPage() {
         return Math.round(bmr * 1.2);
     }, [heightCm, latestWeight, age, sex]);
 
+    const recommendedProtein = latestWeight ? Math.round(latestWeight * 1.6) : 0;
+
+    const activeCalorieTarget =
+        calorieTargetMode === "manual" && calorieTarget
+            ? calorieTarget
+            : recommendedCalories;
+
+    const activeProteinTarget =
+        proteinTargetMode === "manual" && proteinTarget
+            ? proteinTarget
+            : recommendedProtein;
+
+    const calorieProgress = activeCalorieTarget
+        ? Math.min((todayCalories / activeCalorieTarget) * 100, 100)
+        : 0;
+
+    const proteinProgress = activeProteinTarget
+        ? Math.min((todayProtein / activeProteinTarget) * 100, 100)
+        : 0;
+
+    const dailyDeficit =
+        recommendedCalories && activeCalorieTarget
+            ? recommendedCalories - activeCalorieTarget
+            : 0;
+
+    const weeklyWeightChangeKg = (dailyDeficit * 7) / 7700;
+
     const bmiLabel = !bmi
         ? "Add height in settings"
         : bmi < 18.5
@@ -463,7 +501,9 @@ export default function DashboardPage() {
                     <p className="mt-2 text-4xl font-black text-rose-950">
                         {Math.round(todayCalories)}
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">planned today</p>
+                    <p className="text-sm font-semibold text-rose-500">
+                        of {activeCalorieTarget || "—"} kcal
+                    </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-purple-50 p-6 shadow-sm">
@@ -474,7 +514,9 @@ export default function DashboardPage() {
                     <p className="mt-2 text-4xl font-black text-rose-950">
                         {todayProtein.toFixed(1)}g
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">planned today</p>
+                    <p className="text-sm font-semibold text-rose-500">
+                        of {activeProteinTarget || "—"}g
+                    </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-pink-50 p-6 shadow-sm">
@@ -499,6 +541,78 @@ export default function DashboardPage() {
                         {weeklyCost.toFixed(2)}€
                     </p>
                     <p className="text-sm font-semibold text-rose-500">next 7 days</p>
+                </div>
+            </section>
+
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <h2 className="text-3xl font-black text-pink-500">
+                    Daily goals ♡
+                </h2>
+
+                <div className="mt-5 space-y-5">
+                    <div>
+                        <div className="flex justify-between text-sm font-black text-rose-700">
+                            <span>Calories</span>
+                            <span>
+                                {Math.round(todayCalories)} / {activeCalorieTarget || "—"} kcal
+                            </span>
+                        </div>
+
+                        <div className="mt-2 h-4 overflow-hidden rounded-full bg-orange-50">
+                            <div
+                                className="h-full rounded-full bg-orange-400 transition-all"
+                                style={{ width: `${calorieProgress}%` }}
+                            />
+                        </div>
+
+                        <p className="mt-2 text-sm font-semibold text-rose-500">
+                            {calorieTargetMode === "auto"
+                                ? "Auto target updates with your latest weight."
+                                : "Manual target is fixed from settings."}
+                        </p>
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between text-sm font-black text-rose-700">
+                            <span>Protein</span>
+                            <span>
+                                {todayProtein.toFixed(1)} / {activeProteinTarget || "—"}g
+                            </span>
+                        </div>
+
+                        <div className="mt-2 h-4 overflow-hidden rounded-full bg-purple-50">
+                            <div
+                                className="h-full rounded-full bg-purple-400 transition-all"
+                                style={{ width: `${proteinProgress}%` }}
+                            />
+                        </div>
+
+                        <p className="mt-2 text-sm font-semibold text-rose-500">
+                            {proteinTargetMode === "auto"
+                                ? "Auto target uses latest weight × 1.6g."
+                                : "Manual protein target is fixed from settings."}
+                        </p>
+                    </div>
+
+                    <div className="rounded-2xl bg-pink-50 p-4">
+                        <p className="text-xs font-bold uppercase text-pink-400">
+                            Estimated weekly change
+                        </p>
+
+                        <p className="mt-1 text-2xl font-black text-rose-950">
+                            {!recommendedCalories || !activeCalorieTarget
+                                ? "—"
+                                : weeklyWeightChangeKg > 0
+                                    ? `-${weeklyWeightChangeKg.toFixed(2)} kg/week`
+                                    : weeklyWeightChangeKg < 0
+                                        ? `+${Math.abs(weeklyWeightChangeKg).toFixed(2)} kg/week`
+                                        : "Maintain"}
+                        </p>
+
+                        <p className="mt-1 text-sm font-bold text-rose-500">
+                            based on calorie target vs estimated maintenance
+                        </p>
+                    </div>
                 </div>
             </section>
 
