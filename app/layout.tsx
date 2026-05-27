@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Link from "next/link";
 import "./globals.css";
 import AuthGate from "@/components/AuthGate";
 import LogoutButton from "@/components/LogoutButton";
@@ -34,36 +35,36 @@ export default function RootLayout({
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4ef,transparent_35%),radial-gradient(circle_at_top_right,#f3e8ff,transparent_30%),linear-gradient(#fff7fb,#fff)]">
           <nav className="sticky top-0 z-50 border-b border-pink-100 bg-white/70 backdrop-blur-md">
             <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-              <a href="/" className="text-2xl font-black text-pink-500 drop-shadow-sm">
+              <Link href="/" className="text-2xl font-black text-pink-500 drop-shadow-sm">
                 MacroBudget ♡
-              </a>
+              </Link>
 
               <div className="flex gap-2 text-sm font-semibold">
-                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/dashboard">
+                <Link className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/dashboard">
                   Dashboard
-                </a>
-                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/ingredients">
+                </Link>
+                <Link className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/ingredients">
                   Ingredients
-                </a>
-                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/recipes">
+                </Link>
+                <Link className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/recipes">
                   Recipes
-                </a>
-                <a className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/meal-plan">
+                </Link>
+                <Link className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100" href="/meal-plan">
                   Meal Plan
-                </a>
-                <a
+                </Link>
+                <Link
                   className="flex h-11 items-center rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100"
                   href="/shopping-list"
                 >
                   Shopping List
-                </a>
-                <a
+                </Link>
+                <Link
                   href="/settings"
                   className="flex h-11 w-11 items-center justify-center rounded-full text-rose-700 transition hover:bg-pink-100"
                   aria-label="Settings"
                 >
                   <Settings size={22} />
-                </a>
+                </Link>
               </div>
             </div>
           </nav>

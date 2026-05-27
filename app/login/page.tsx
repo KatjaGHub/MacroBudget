@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
+    const router = useRouter();
     const [mode, setMode] = useState<"login" | "register">("login");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -21,7 +23,7 @@ export default function LoginPage() {
                 return;
             }
 
-            window.location.href = "/dashboard";
+            router.replace("/dashboard");
             return;
         }
 
@@ -52,7 +54,7 @@ export default function LoginPage() {
             }
         }
 
-        window.location.href = "/dashboard";
+        router.replace("/dashboard");
     };
 
     return (

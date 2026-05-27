@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +26,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
       if (!data.session) {
         setLoading(false);
-        window.location.href = "/login";
+        router.replace("/login");
         return;
       }
 
@@ -34,17 +35,10 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
 
     checkUser();
 
-    const handlePageShow = () => {
-      checkUser();
-    };
-
-    window.addEventListener("pageshow", handlePageShow);
-
     return () => {
       active = false;
-      window.removeEventListener("pageshow", handlePageShow);
     };
-  }, [pathname]);
+  }, [pathname, router]);
 
   if (loading) {
     return (
