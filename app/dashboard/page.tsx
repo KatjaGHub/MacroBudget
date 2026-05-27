@@ -113,6 +113,7 @@ export default function DashboardPage() {
     const [proteinTarget, setProteinTarget] = useState<number | null>(null);
     const [calorieTargetMode, setCalorieTargetMode] = useState<"auto" | "manual">("auto");
     const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
+    const [goalWeight, setGoalWeight] = useState<number | null>(null);
 
     const loadDashboard = async () => {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -125,7 +126,7 @@ export default function DashboardPage() {
         const { data: profileData } = await supabase
             .from("profiles")
             .select(
-                "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode"
+                "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode, goal_weight"
             )
             .eq("id", currentUserId)
             .maybeSingle();
@@ -138,6 +139,7 @@ export default function DashboardPage() {
         setProteinTarget(profileData?.protein_target ?? null);
         setCalorieTargetMode(profileData?.calorie_target_mode === "manual" ? "manual" : "auto");
         setProteinTargetMode(profileData?.protein_target_mode === "manual" ? "manual" : "auto");
+        setGoalWeight(profileData?.goal_weight ?? null);
 
         const currentHouseholdId = await getHouseholdId();
 
@@ -387,6 +389,16 @@ export default function DashboardPage() {
             : 0;
 
     const weeklyWeightChangeKg = (dailyDeficit * 7) / 7700;
+    const goalWeightDifference = latestWeight && goalWeight ? latestWeight - goalWeight : 0;
+    const goalWeightDirection =
+        !goalWeightDifference ? "maintain" : goalWeightDifference > 0 ? "lose" : "gain";
+    const goalWeightAligned =
+        (goalWeightDirection === "lose" && weeklyWeightChangeKg > 0) ||
+        (goalWeightDirection === "gain" && weeklyWeightChangeKg < 0);
+    const estimatedGoalWeeks =
+        goalWeightAligned && weeklyWeightChangeKg
+            ? Math.abs(goalWeightDifference) / Math.abs(weeklyWeightChangeKg)
+            : 0;
 
     const bmiLabel = !bmi
         ? "Add height in settings"
@@ -730,6 +742,26 @@ export default function DashboardPage() {
                             {bmi ? bmi.toFixed(1) : "—"}
                         </p>
                         <p className="mt-1 text-sm font-bold text-rose-500">{bmiLabel}</p>
+                    </div>
+
+                    <div className="mt-3 rounded-2xl bg-rose-50 p-4">
+                        <p className="text-xs font-bold uppercase text-rose-400">
+                            Goal weight
+                        </p>
+                        <p className="mt-1 text-2xl font-black text-rose-950">
+                            {goalWeight ? `${goalWeight} kg` : "—"}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-rose-500">
+                            {!goalWeight
+                                ? "Add a goal weight in settings."
+                                : !latestWeight
+                                    ? "Log your current weight to estimate progress."
+                                    : goalWeightDirection === "maintain"
+                                        ? "You are at your goal weight."
+                                        : goalWeightAligned
+                                            ? `${Math.abs(goalWeightDifference).toFixed(1)} kg to ${goalWeightDirection}; around ${Math.ceil(estimatedGoalWeeks)} weeks`
+                                            : "Adjust your calorie target to estimate this goal."}
+                        </p>
                     </div>
 
                     <div className="mt-3 rounded-2xl bg-orange-50 p-4">
