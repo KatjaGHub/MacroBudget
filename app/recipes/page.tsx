@@ -31,13 +31,17 @@ type Recipe = {
 
 export default function RecipesPage() {
     const [search, setSearch] = useState("");
+    const [loading, setLoading] = useState(true);
     const [recipes, setRecipes] = useState<Recipe[]>([]);
 
     useEffect(() => {
         const fetchRecipes = async () => {
+            setLoading(true);
+
             const householdId = await getHouseholdId();
 
             if (!householdId) {
+                setLoading(false);
                 alert("No household found.");
                 return;
             }
@@ -67,11 +71,13 @@ export default function RecipesPage() {
                 .order("name", { ascending: true });
 
             if (error) {
+                setLoading(false);
                 alert(error.message);
                 return;
             }
 
             setRecipes((data ?? []) as Recipe[]);
+            setLoading(false);
         };
 
         fetchRecipes();
@@ -193,98 +199,143 @@ export default function RecipesPage() {
             </section>
 
             <section className="mt-8 space-y-10">
-                {groupedRecipes.map((group) => (
-                    <div
-                        key={group.letter}
-                        id={`recipe-letter-${group.letter}`}
-                        className="scroll-mt-24"
-                    >
-                        <h2 className="mb-4 text-3xl font-black text-pink-500">
-                            {group.letter} ♡
-                        </h2>
-
-                        <div className="grid gap-6 md:grid-cols-2">
-                            {group.items.map((recipe) => (
-                                <article
-                                    key={recipe.id}
-                                    className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.18)]"
-                                >
-                                    <div className="flex items-start justify-between gap-4">
-                                        <div>
-                                            <h3 className="text-2xl font-black text-rose-950">
-                                                {recipe.name}
-                                            </h3>
-
-                                            <p className="mt-1 text-sm font-medium text-rose-500">
-                                                {recipe.servings} servings
-                                            </p>
-                                        </div>
-
-                                        <div className="flex items-center gap-2">
-                                            <button
-                                                onClick={() =>
-                                                    handleDeleteRecipe(recipe.id, recipe.name)
-                                                }
-                                                className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
-                                                aria-label={`Delete ${recipe.name}`}
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
-
-                                            <Link
-                                                href={`/recipes/${recipe.id}`}
-                                                className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
-                                            >
-                                                View ♡
-                                            </Link>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 grid grid-cols-3 gap-3">
-                                        <div className="rounded-2xl bg-pink-50 p-4 text-center">
-                                            <p className="text-xs font-bold uppercase text-pink-400">
-                                                Cost
-                                            </p>
-                                            <p className="mt-1 font-black text-rose-900">
-                                                {recipe.cost.toFixed(2)} €
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-2xl bg-orange-50 p-4 text-center">
-                                            <p className="text-xs font-bold uppercase text-orange-400">
-                                                Calories
-                                            </p>
-                                            <p className="mt-1 font-black text-rose-900">
-                                                {recipe.calories}
-                                            </p>
-                                        </div>
-
-                                        <div className="rounded-2xl bg-purple-50 p-4 text-center">
-                                            <p className="text-xs font-bold uppercase text-purple-400">
-                                                Protein
-                                            </p>
-                                            <p className="mt-1 font-black text-rose-900">
-                                                {recipe.protein.toFixed(1)}g
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 rounded-2xl border border-pink-100 bg-rose-50/50 p-4">
-                                        <p className="text-sm font-black text-pink-500">
-                                            Ingredients
-                                        </p>
-
-                                        <ul className="mt-3 space-y-2 text-sm text-rose-800">
-                                            {recipe.ingredientNames.map((ingredient) => (
-                                                <li key={ingredient}>♡ {ingredient}</li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </article>
-                            ))}
-                        </div>
+                {loading ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            loading
+                        </p>
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            Loading recipes ♡
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Pulling together your recipe collection.
+                        </p>
                     </div>
-                ))}
+                ) : recipes.length === 0 ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            empty cookbook
+                        </p>
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            No recipes yet ♡
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Create your first recipe to track serving cost, calories and protein.
+                        </p>
+                        <Link
+                            href="/create-recipe"
+                            className="mt-6 inline-flex items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
+                        >
+                            <Plus size={20} strokeWidth={3} />
+                            Create recipe
+                        </Link>
+                    </div>
+                ) : groupedRecipes.length === 0 ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            no matches
+                        </p>
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            Nothing matches “{search}” ♡
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Try another search or create a new recipe.
+                        </p>
+                    </div>
+                ) : (
+                    groupedRecipes.map((group) => (
+                        <div
+                            key={group.letter}
+                            id={`recipe-letter-${group.letter}`}
+                            className="scroll-mt-24"
+                        >
+                            <h2 className="mb-4 text-3xl font-black text-pink-500">
+                                {group.letter} ♡
+                            </h2>
+
+                            <div className="grid gap-6 md:grid-cols-2">
+                                {group.items.map((recipe) => (
+                                    <article
+                                        key={recipe.id}
+                                        className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.18)]"
+                                    >
+                                        <div className="flex items-start justify-between gap-4">
+                                            <div>
+                                                <h3 className="text-2xl font-black text-rose-950">
+                                                    {recipe.name}
+                                                </h3>
+
+                                                <p className="mt-1 text-sm font-medium text-rose-500">
+                                                    {recipe.servings} servings
+                                                </p>
+                                            </div>
+
+                                            <div className="flex items-center gap-2">
+                                                <button
+                                                    onClick={() =>
+                                                        handleDeleteRecipe(recipe.id, recipe.name)
+                                                    }
+                                                    className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
+                                                    aria-label={`Delete ${recipe.name}`}
+                                                >
+                                                    <Trash2 size={18} />
+                                                </button>
+
+                                                <Link
+                                                    href={`/recipes/${recipe.id}`}
+                                                    className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
+                                                >
+                                                    View ♡
+                                                </Link>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 grid grid-cols-3 gap-3">
+                                            <div className="rounded-2xl bg-pink-50 p-4 text-center">
+                                                <p className="text-xs font-bold uppercase text-pink-400">
+                                                    Cost
+                                                </p>
+                                                <p className="mt-1 font-black text-rose-900">
+                                                    {recipe.cost.toFixed(2)} €
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-2xl bg-orange-50 p-4 text-center">
+                                                <p className="text-xs font-bold uppercase text-orange-400">
+                                                    Calories
+                                                </p>
+                                                <p className="mt-1 font-black text-rose-900">
+                                                    {recipe.calories}
+                                                </p>
+                                            </div>
+
+                                            <div className="rounded-2xl bg-purple-50 p-4 text-center">
+                                                <p className="text-xs font-bold uppercase text-purple-400">
+                                                    Protein
+                                                </p>
+                                                <p className="mt-1 font-black text-rose-900">
+                                                    {recipe.protein.toFixed(1)}g
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="mt-6 rounded-2xl border border-pink-100 bg-rose-50/50 p-4">
+                                            <p className="text-sm font-black text-pink-500">
+                                                Ingredients
+                                            </p>
+
+                                            <ul className="mt-3 space-y-2 text-sm text-rose-800">
+                                                {recipe.ingredientNames.map((ingredient) => (
+                                                    <li key={ingredient}>♡ {ingredient}</li>
+                                                ))}
+                                            </ul>
+                                        </div>
+                                    </article>
+                                ))}
+                            </div>
+                        </div>
+                    ))
+                )}
             </section>
 
             <ScrollToTop />

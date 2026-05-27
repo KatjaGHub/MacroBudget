@@ -30,6 +30,7 @@ const years = Array.from({ length: 100 }, (_, index) =>
 );
 
 export default function SettingsPage() {
+    const [loading, setLoading] = useState(true);
     const [fullName, setFullName] = useState("");
     const [heightCm, setHeightCm] = useState("");
     const [sex, setSex] = useState("");
@@ -47,10 +48,15 @@ export default function SettingsPage() {
 
     useEffect(() => {
         const fetchProfile = async () => {
+            setLoading(true);
+
             const { data: sessionData } = await supabase.auth.getSession();
             const userId = sessionData.session?.user.id;
 
-            if (!userId) return;
+            if (!userId) {
+                setLoading(false);
+                return;
+            }
 
             const { data } = await supabase
                 .from("profiles")
@@ -76,6 +82,8 @@ export default function SettingsPage() {
                 setBirthMonth(month);
                 setBirthDay(day);
             }
+
+            setLoading(false);
         };
 
         fetchProfile();
@@ -116,6 +124,22 @@ export default function SettingsPage() {
 
     return (
         <main className="mx-auto max-w-3xl p-6">
+            {loading ? (
+                <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+                    <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                        loading
+                    </p>
+
+                    <p className="mt-2 text-4xl font-black text-pink-500">
+                        Loading settings ♡
+                    </p>
+
+                    <p className="mt-3 font-semibold text-rose-500">
+                        Pulling in your profile, goals and household options.
+                    </p>
+                </section>
+            ) : (
+                <>
             <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     account
@@ -432,6 +456,8 @@ export default function SettingsPage() {
                     <LogoutButton />
                 </div>
             </section>
+                </>
+            )}
         </main>
     );
 }

@@ -23,6 +23,7 @@ type Profile = {
 
 export default function ShoppingListPage() {
     const [items, setItems] = useState<ShoppingItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [newItem, setNewItem] = useState("");
     const [newQuantity, setNewQuantity] = useState("");
     const [householdId, setHouseholdId] = useState<number | null>(null);
@@ -33,6 +34,8 @@ export default function ShoppingListPage() {
         let channelName = "";
 
         const fetchShoppingItems = async () => {
+            setLoading(true);
+
             const { data: sessionData } = await supabase.auth.getSession();
             const currentUserId = sessionData.session?.user.id;
 
@@ -49,6 +52,7 @@ export default function ShoppingListPage() {
                 .single();
 
             if (membershipError) {
+                setLoading(false);
                 alert(membershipError.message);
                 return;
             }
@@ -67,6 +71,7 @@ export default function ShoppingListPage() {
                     .order("created_at", { ascending: false });
 
                 if (error) {
+                    setLoading(false);
                     alert(error.message);
                     return;
                 }
@@ -95,6 +100,7 @@ export default function ShoppingListPage() {
 
                 if (isMounted) {
                     setItems(itemsWithProfiles as ShoppingItem[]);
+                    setLoading(false);
                 }
             };
 
@@ -222,6 +228,7 @@ export default function ShoppingListPage() {
 
     const toBuyItems = items.filter((item) => !item.is_checked);
     const boughtItems = items.filter((item) => item.is_checked);
+    const hasAnyItems = items.length > 0;
 
     return (
         <main className="mx-auto max-w-2xl p-6">
@@ -272,78 +279,54 @@ export default function ShoppingListPage() {
             </section>
 
             <section className="mt-8">
-                <div className="space-y-1">
-                    {toBuyItems.map((item) => (
-                        <div
-                            key={item.id}
-                            className="group flex items-center gap-4 rounded-2xl px-2 py-3 transition hover:bg-white/70"
-                        >
-                            <button
-                                onClick={() => toggleBought(item)}
-                                className="h-7 w-7 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
-                                aria-label={`Mark ${item.name} as bought`}
-                            />
-
-                            <button
-                                onClick={() => toggleBought(item)}
-                                className="min-w-0 flex-1 text-left"
-                            >
-                                <p className="truncate text-xl font-black text-rose-950">
-                                    {item.name}
-                                </p>
-
-                                {item.quantity && (
-                                    <p className="text-sm font-medium text-rose-700">
-                                        {item.quantity}
-                                    </p>
-                                )}
-
-                                <p className="text-xs font-bold text-rose-300">
-                                    added by {getAddedByText(item)}
-                                </p>
-                            </button>
-
-                            <button
-                                onClick={() => deleteItem(item.id)}
-                                className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
-                                aria-label={`Delete ${item.name}`}
-                            >
-                                <Trash2 size={18} />
-                            </button>
-                        </div>
-                    ))}
-                </div>
-
-                {boughtItems.length > 0 && (
-                    <div className="mt-10">
-                        <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-rose-300">
-                            Bought
+                {loading ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            loading
                         </p>
-
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            Loading shopping list ♡
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Syncing your shared items.
+                        </p>
+                    </div>
+                ) : !hasAnyItems ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            list is clear
+                        </p>
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            No shopping items yet ♡
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Add your first grocery item above to start the shared list.
+                        </p>
+                    </div>
+                ) : (
+                    <>
                         <div className="space-y-1">
-                            {boughtItems.map((item) => (
+                            {toBuyItems.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="group flex items-center gap-4 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60"
+                                    className="group flex items-center gap-4 rounded-2xl px-2 py-3 transition hover:bg-white/70"
                                 >
                                     <button
                                         onClick={() => toggleBought(item)}
-                                        className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
-                                        aria-label={`Mark ${item.name} as not bought`}
-                                    >
-                                        ✓
-                                    </button>
+                                        className="h-7 w-7 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
+                                        aria-label={`Mark ${item.name} as bought`}
+                                    />
 
                                     <button
                                         onClick={() => toggleBought(item)}
                                         className="min-w-0 flex-1 text-left"
                                     >
-                                        <p className="truncate text-xl font-black text-rose-400 line-through">
+                                        <p className="truncate text-xl font-black text-rose-950">
                                             {item.name}
                                         </p>
 
                                         {item.quantity && (
-                                            <p className="text-sm font-medium text-rose-300 line-through">
+                                            <p className="text-sm font-medium text-rose-700">
                                                 {item.quantity}
                                             </p>
                                         )}
@@ -363,7 +346,59 @@ export default function ShoppingListPage() {
                                 </div>
                             ))}
                         </div>
-                    </div>
+
+                        {boughtItems.length > 0 && (
+                            <div className="mt-10">
+                                <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-rose-300">
+                                    Bought
+                                </p>
+
+                                <div className="space-y-1">
+                                    {boughtItems.map((item) => (
+                                        <div
+                                            key={item.id}
+                                            className="group flex items-center gap-4 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60"
+                                        >
+                                            <button
+                                                onClick={() => toggleBought(item)}
+                                                className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
+                                                aria-label={`Mark ${item.name} as not bought`}
+                                            >
+                                                ✓
+                                            </button>
+
+                                            <button
+                                                onClick={() => toggleBought(item)}
+                                                className="min-w-0 flex-1 text-left"
+                                            >
+                                                <p className="truncate text-xl font-black text-rose-400 line-through">
+                                                    {item.name}
+                                                </p>
+
+                                                {item.quantity && (
+                                                    <p className="text-sm font-medium text-rose-300 line-through">
+                                                        {item.quantity}
+                                                    </p>
+                                                )}
+
+                                                <p className="text-xs font-bold text-rose-300">
+                                                    added by {getAddedByText(item)}
+                                                </p>
+                                            </button>
+
+                                            <button
+                                                onClick={() => deleteItem(item.id)}
+                                                className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
+                                                aria-label={`Delete ${item.name}`}
+                                            >
+                                                <Trash2 size={18} />
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </>
                 )}
             </section>
         </main>

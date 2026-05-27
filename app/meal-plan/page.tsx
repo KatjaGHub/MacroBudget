@@ -99,13 +99,19 @@ export default function MealPlanPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [planItems, setPlanItems] = useState<MealPlanItem[]>([]);
   const [householdId, setHouseholdId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
+
       const { data: sessionData } = await supabase.auth.getSession();
       const userId = sessionData.session?.user.id;
 
-      if (!userId) return;
+      if (!userId) {
+        setLoading(false);
+        return;
+      }
 
       const { data: membershipData, error: membershipError } = await supabase
         .from("household_members")
@@ -116,6 +122,7 @@ export default function MealPlanPage() {
         .single();
 
       if (membershipError) {
+        setLoading(false);
         alert(membershipError.message);
         return;
       }
@@ -130,6 +137,7 @@ export default function MealPlanPage() {
         .order("name", { ascending: true });
 
       if (ingredientsError) {
+        setLoading(false);
         alert(ingredientsError.message);
         return;
       }
@@ -158,6 +166,7 @@ export default function MealPlanPage() {
         .order("name", { ascending: true });
 
       if (recipesError) {
+        setLoading(false);
         alert(recipesError.message);
         return;
       }
@@ -168,6 +177,7 @@ export default function MealPlanPage() {
         .eq("household_id", currentHouseholdId);
 
       if (mealPlanError) {
+        setLoading(false);
         alert(mealPlanError.message);
         return;
       }
@@ -187,6 +197,7 @@ export default function MealPlanPage() {
           amount: Number(item.amount),
         }))
       );
+      setLoading(false);
     };
 
     fetchData();
@@ -352,9 +363,26 @@ export default function MealPlanPage() {
   };
 
   const availableItems = itemType === "recipe" ? recipes : ingredients;
+  const hasPlannerOptions = recipes.length > 0 || ingredients.length > 0;
 
   return (
     <main className="mx-auto max-w-6xl p-6">
+      {loading ? (
+        <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+          <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+            loading
+          </p>
+
+          <h1 className="mt-2 text-4xl font-black text-pink-500">
+            Loading meal plan ♡
+          </h1>
+
+          <p className="mt-3 font-semibold text-rose-500">
+            Pulling in your meals, ingredients and recipes.
+          </p>
+        </section>
+      ) : (
+        <>
 
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
@@ -539,85 +567,100 @@ export default function MealPlanPage() {
           Adding to: {selectedDayLabel}
         </p>
 
-        <div className="mt-5 grid gap-4 md:grid-cols-2">
-          <div>
-            <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              Meal
-            </label>
+        {!hasPlannerOptions ? (
+          <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
+            <p className="text-lg font-black text-pink-500">
+              Nothing to add yet ♡
+            </p>
+            <p className="mt-2 font-semibold text-rose-500">
+              Add ingredients or recipes first, then you can build your meal plan here.
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              <div>
+                <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
+                  Meal
+                </label>
 
-            <select
-              value={mealType}
-              onChange={(event) => setMealType(event.target.value as MealType)}
-              className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
+                <select
+                  value={mealType}
+                  onChange={(event) => setMealType(event.target.value as MealType)}
+                  className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
+                >
+                  {mealTypes.map((type) => (
+                    <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
+                  Type
+                </label>
+
+                <select
+                  value={itemType}
+                  onChange={(event) => {
+                    setItemType(event.target.value as ItemType);
+                    setSelectedItemId("");
+                    setAmount("1");
+                  }}
+                  className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
+                >
+                  <option value="recipe">Recipe</option>
+                  <option value="ingredient">Ingredient</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
+                  {itemType === "recipe" ? "Recipe" : "Ingredient"}
+                </label>
+
+                <select
+                  value={selectedItemId}
+                  onChange={(event) => setSelectedItemId(event.target.value)}
+                  className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
+                >
+                  <option value="">Choose item</option>
+
+                  {availableItems.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
+                  {itemType === "recipe" ? "Servings" : "Amount"}
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  value={amount}
+                  onChange={(event) => setAmount(event.target.value)}
+                  className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={addMealItem}
+              className="mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
             >
-              {mealTypes.map((type) => (
-                <option key={type}>{type}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              Type
-            </label>
-
-            <select
-              value={itemType}
-              onChange={(event) => {
-                setItemType(event.target.value as ItemType);
-                setSelectedItemId("");
-                setAmount("1");
-              }}
-              className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
-            >
-              <option value="recipe">Recipe</option>
-              <option value="ingredient">Ingredient</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              {itemType === "recipe" ? "Recipe" : "Ingredient"}
-            </label>
-
-            <select
-              value={selectedItemId}
-              onChange={(event) => setSelectedItemId(event.target.value)}
-              className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
-            >
-              <option value="">Choose item</option>
-
-              {availableItems.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              {itemType === "recipe" ? "Servings" : "Amount"}
-            </label>
-
-            <input
-              type="number"
-              min="0"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
-            />
-          </div>
-        </div>
-
-        <button
-          onClick={addMealItem}
-          className="mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
-        >
-          <Plus size={20} strokeWidth={3} />
-          Add meal
-        </button>
+              <Plus size={20} strokeWidth={3} />
+              Add meal
+            </button>
+          </>
+        )}
       </section>
+      </>
+      )}
     </main>
   );
 }

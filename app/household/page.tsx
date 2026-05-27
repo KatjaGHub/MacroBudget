@@ -158,7 +158,19 @@ export default function HouseholdPage() {
     if (loading) {
         return (
             <main className="mx-auto max-w-3xl p-6">
-                <p className="font-black text-pink-500">Loading household ♡</p>
+                <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+                    <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                        loading
+                    </p>
+
+                    <p className="mt-2 text-4xl font-black text-pink-500">
+                        Loading household ♡
+                    </p>
+
+                    <p className="mt-3 font-semibold text-rose-500">
+                        Checking your shared space and invite details.
+                    </p>
+                </section>
             </main>
         );
     }
@@ -209,6 +221,22 @@ export default function HouseholdPage() {
                     >
                         Leave household
                     </button>
+                </section>
+            )}
+
+            {!household && (
+                <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                    <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                        household status
+                    </p>
+
+                    <h2 className="mt-2 text-3xl font-black text-rose-950">
+                        You&apos;re between households ♡
+                    </h2>
+
+                    <p className="mt-3 text-sm font-semibold text-rose-500">
+                        Join a shared space below or let MacroBudget create one for you when you come back here.
+                    </p>
                 </section>
             )}
 
