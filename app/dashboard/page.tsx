@@ -876,7 +876,7 @@ export default function DashboardPage() {
                             ) : null}
 
                             {showGoalAchievement && (
-                                <div className="mt-4 animate-pulse rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
+                                <div className="rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
                                     <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
                                         Achievement unlocked
                                     </p>

@@ -35,7 +35,7 @@ export default function RootLayout({
         <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4ef,transparent_35%),radial-gradient(circle_at_top_right,#f3e8ff,transparent_30%),linear-gradient(#fff7fb,#fff)]">
           <nav className="sticky top-0 z-50 border-b border-pink-100 bg-white/70 backdrop-blur-md">
             <div className="mx-auto flex max-w-6xl items-center justify-between p-4">
-              <Link href="/" className="text-2xl font-black text-pink-500 drop-shadow-sm">
+              <Link href="/dashboard" className="text-2xl font-black text-pink-500 drop-shadow-sm">
                 MacroBudget ♡
               </Link>
 
