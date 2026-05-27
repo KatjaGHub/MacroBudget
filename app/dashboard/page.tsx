@@ -347,6 +347,17 @@ export default function DashboardPage() {
         return latestWeight / (heightMeters * heightMeters);
     }, [heightCm, latestWeight]);
 
+    const healthyWeightRange = useMemo(() => {
+        const height = Number(heightCm);
+        if (!height) return null;
+
+        const heightMeters = height / 100;
+        return {
+            min: 18.5 * heightMeters * heightMeters,
+            max: 24.9 * heightMeters * heightMeters,
+        };
+    }, [heightCm]);
+
     const recommendedCalories = useMemo(() => {
         const height = Number(heightCm);
         const weight = Number(latestWeight);
@@ -769,7 +780,7 @@ export default function DashboardPage() {
                 </div>
             </section>
 
-            <section className="mt-8 grid items-stretch gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+            <section className="mt-8 grid items-stretch gap-6 lg:grid-cols-[0.95fr_1.05fr]">
                 <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                     <Scale className="text-pink-400" />
 
@@ -794,92 +805,118 @@ export default function DashboardPage() {
                         </button>
                     </div>
 
-                    <div className="mt-5 rounded-2xl bg-pink-50 p-4">
-                        <p className="text-xs font-bold uppercase text-pink-400">BMI</p>
-                        <p className="mt-1 text-2xl font-black text-rose-950">
-                            {bmi ? bmi.toFixed(1) : "—"}
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-rose-500">{bmiLabel}</p>
-                    </div>
-
-                    <div className="mt-3 rounded-2xl bg-rose-50 p-4">
-                        <p className="text-xs font-bold uppercase text-rose-400">
-                            Goal weight
-                        </p>
-                        <p className="mt-1 text-2xl font-black text-rose-950">
-                            {goalWeight ? `${goalWeight} kg` : "—"}
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-rose-500">
-                            {!goalWeight
-                                ? "Add a goal weight in settings."
-                                : !latestWeight
-                                    ? "Log your current weight to estimate progress."
-                                    : goalWeightDirection === "maintain"
-                                        ? "You are at your goal weight."
-                                        : goalWeightAligned
-                                            ? `${Math.abs(goalWeightDifference).toFixed(1)} kg to ${goalWeightDirection}; around ${Math.ceil(estimatedGoalWeeks)} weeks`
-                                            : "Adjust your calorie target to estimate this goal."}
-                        </p>
-
-                        {goalStartWeight && goalWeight && latestWeight ? (
-                            <div className="mt-4">
-                                <div className="flex justify-between text-xs font-black uppercase text-rose-400">
-                                    <span>Progress</span>
-                                    <span>{goalProgressKg.toFixed(1)} / {goalTotalDistance.toFixed(1)} kg</span>
-                                </div>
-
-                                <div className="mt-2 h-3 overflow-hidden rounded-full bg-white">
-                                    <div
-                                        className="h-full rounded-full bg-pink-400 transition-all"
-                                        style={{ width: `${goalProgressPercent}%` }}
-                                    />
-                                </div>
-
-                                <p className="mt-2 text-xs font-bold text-rose-400">
-                                    Next achievement at {nextGoalMilestoneKg.toFixed(1)} kg progress.
-                                </p>
-                            </div>
-                        ) : null}
-                    </div>
-
-                    {showGoalAchievement && (
-                        <div className="mt-3 animate-pulse rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
-                            <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
-                                Achievement unlocked
+                    <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                        <div className="rounded-2xl bg-orange-50 p-4">
+                            <p className="text-xs font-bold uppercase text-orange-400">
+                                Recommended calories
                             </p>
-
-                            <p className="mt-1 text-2xl font-black">
-                                {goalMilestoneKg.toFixed(0)} kg closer ♡
+                            <p className="mt-1 text-2xl font-black text-rose-950">
+                                {recommendedCalories ? `${recommendedCalories} kcal` : "—"}
                             </p>
-
-                            <p className="mt-1 text-sm font-bold text-pink-50">
-                                {goalAchievementMessage}
+                            <p className="mt-1 text-sm font-bold text-rose-500">
+                                estimated maintenance
                             </p>
                         </div>
-                    )}
 
-                    <div className="mt-3 rounded-2xl bg-orange-50 p-4">
-                        <p className="text-xs font-bold uppercase text-orange-400">
-                            Recommended calories
-                        </p>
-                        <p className="mt-1 text-2xl font-black text-rose-950">
-                            {recommendedCalories ? `${recommendedCalories} kcal` : "—"}
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-rose-500">
-                            estimated maintenance
-                        </p>
-                    </div>
+                        <div className="rounded-2xl bg-purple-50 p-4">
+                            <p className="text-xs font-bold uppercase text-purple-400">
+                                Recommended protein
+                            </p>
+                            <p className="mt-1 text-2xl font-black text-rose-950">
+                                {recommendedProtein ? `${recommendedProtein} g` : "—"}
+                            </p>
+                            <p className="mt-1 text-sm font-bold text-rose-500">
+                                based on latest weight × 1.6g
+                            </p>
+                        </div>
 
-                    <div className="mt-3 rounded-2xl bg-purple-50 p-4">
-                        <p className="text-xs font-bold uppercase text-purple-400">
-                            Recommended protein
-                        </p>
-                        <p className="mt-1 text-2xl font-black text-rose-950">
-                            {recommendedProtein ? `${recommendedProtein} g` : "—"}
-                        </p>
-                        <p className="mt-1 text-sm font-bold text-rose-500">
-                            based on latest weight × 1.6g
-                        </p>
+                        <div className="rounded-2xl bg-rose-50 p-4 sm:col-span-2">
+                            <div className="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p className="text-xs font-bold uppercase text-rose-400">
+                                        Goal weight
+                                    </p>
+                                    <p className="mt-1 text-2xl font-black text-rose-950">
+                                        {goalWeight ? `${goalWeight} kg` : "—"}
+                                    </p>
+                                </div>
+
+                                {goalStartWeight && goalWeight && latestWeight ? (
+                                    <p className="rounded-full bg-white px-3 py-2 text-xs font-black text-rose-400">
+                                        {goalProgressKg.toFixed(1)} / {goalTotalDistance.toFixed(1)} kg
+                                    </p>
+                                ) : null}
+                            </div>
+
+                            <p className="mt-2 text-sm font-bold text-rose-500">
+                                {!goalWeight
+                                    ? "Add a goal weight in settings."
+                                    : !latestWeight
+                                        ? "Log your current weight to estimate progress."
+                                        : goalWeightDirection === "maintain"
+                                            ? "You are at your goal weight."
+                                            : goalWeightAligned
+                                                ? `${Math.abs(goalWeightDifference).toFixed(1)} kg to ${goalWeightDirection}; around ${Math.ceil(estimatedGoalWeeks)} weeks`
+                                                : "Adjust your calorie target to estimate this goal."}
+                            </p>
+
+                            {goalStartWeight && goalWeight && latestWeight ? (
+                                <div className="mt-4">
+                                    <div className="mt-2 h-3 overflow-hidden rounded-full bg-white">
+                                        <div
+                                            className="h-full rounded-full bg-pink-400 transition-all"
+                                            style={{ width: `${goalProgressPercent}%` }}
+                                        />
+                                    </div>
+
+                                    <p className="mt-2 text-xs font-bold text-rose-400">
+                                        Next achievement at {nextGoalMilestoneKg.toFixed(1)} kg progress.
+                                    </p>
+                                </div>
+                            ) : null}
+
+                            {showGoalAchievement && (
+                                <div className="mt-4 animate-pulse rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
+                                    <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
+                                        Achievement unlocked
+                                    </p>
+
+                                    <p className="mt-1 text-2xl font-black">
+                                        {goalMilestoneKg.toFixed(0)} kg closer ♡
+                                    </p>
+
+                                    <p className="mt-1 text-sm font-bold text-pink-50">
+                                        {goalAchievementMessage}
+                                    </p>
+                                </div>
+                            )}
+                        </div>
+
+                        <div className="rounded-2xl bg-pink-50 p-4 sm:col-span-2">
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                <div>
+                                    <p className="text-xs font-bold uppercase text-pink-400">BMI</p>
+                                    <p className="mt-1 text-2xl font-black text-rose-950">
+                                        {bmi ? bmi.toFixed(1) : "—"}
+                                    </p>
+                                    <p className="mt-1 text-sm font-bold text-rose-500">{bmiLabel}</p>
+                                </div>
+
+                                <div className="rounded-2xl bg-white/70 p-4">
+                                    <p className="text-xs font-bold uppercase text-pink-400">
+                                        Healthy weight range
+                                    </p>
+                                    <p className="mt-1 text-2xl font-black text-rose-950">
+                                        {healthyWeightRange
+                                            ? `${healthyWeightRange.min.toFixed(1)}-${healthyWeightRange.max.toFixed(1)} kg`
+                                            : "—"}
+                                    </p>
+                                    <p className="mt-1 text-sm font-bold text-rose-500">
+                                        based on your height
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
 
                     {(!heightCm || !birthDate || !sex) && (
@@ -897,14 +934,14 @@ export default function DashboardPage() {
                         Household weight progress ♡
                     </h2>
 
-                    <div className="mt-5 rounded-2xl bg-pink-50 p-4">
+                    <div className="mt-5 flex min-h-[22rem] flex-1 flex-col rounded-2xl bg-pink-50 p-4">
                         {weightLogs.length < 2 ? (
-                            <p className="font-semibold text-rose-400">
+                            <p className="flex flex-1 items-center justify-center text-center font-semibold text-rose-400">
                                 Log at least 2 weights to see household progress.
                             </p>
                         ) : (
                             <>
-                                <svg viewBox="0 0 300 130" className="h-56 w-full overflow-visible">
+                                <svg viewBox="0 0 300 130" className="h-72 w-full flex-1 overflow-visible">
                                     {weightUsers.map((user, userIndex) => {
                                         const logs = getUserLogs(user.id);
                                         const color = userColors[userIndex % userColors.length];
