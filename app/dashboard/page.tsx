@@ -325,10 +325,7 @@ export default function DashboardPage() {
         loadDashboard();
     }, []);
 
-    const todayCalories = todayMeals.reduce(
-        (sum, meal) => sum + meal.calories,
-        0
-    );
+    const todayCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0);
     const todayProtein = todayMeals.reduce((sum, meal) => sum + meal.protein, 0);
     const todayCost = todayMeals.reduce((sum, meal) => sum + meal.cost, 0);
     const weeklyCost = weeklyMeals.reduce((sum, meal) => sum + meal.cost, 0);
@@ -424,8 +421,8 @@ export default function DashboardPage() {
     };
 
     const userColors = [
-        "#ec4899",
         "#3b82f6",
+        "#ec4899",
         "#a855f7",
         "#f97316",
         "#10b981",
@@ -545,9 +542,7 @@ export default function DashboardPage() {
             </section>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                <h2 className="text-3xl font-black text-pink-500">
-                    Daily goals ♡
-                </h2>
+                <h2 className="text-3xl font-black text-pink-500">Daily goals ♡</h2>
 
                 <div className="mt-5 space-y-5">
                     <div>
@@ -676,9 +671,9 @@ export default function DashboardPage() {
                             shoppingItems.slice(0, 6).map((item) => (
                                 <div key={item.id} className="rounded-2xl bg-rose-50 p-4">
                                     <div className="flex justify-between gap-3">
-                                        <p className="font-black text-rose-950 ">{item.name}</p>
+                                        <p className="font-black text-rose-950">{item.name}</p>
                                         {item.quantity && (
-                                            <p className="text-xl font-bold text-rose-700 ">
+                                            <p className="text-xl font-bold text-rose-700">
                                                 {item.quantity}
                                             </p>
                                         )}
@@ -704,8 +699,8 @@ export default function DashboardPage() {
                 </div>
             </section>
 
-            <section className="mt-8 grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-                <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+            <section className="mt-8 grid items-stretch gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+                <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                     <Scale className="text-pink-400" />
 
                     <h2 className="mt-3 text-3xl font-black text-pink-500">
@@ -749,6 +744,18 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
+                    <div className="mt-3 rounded-2xl bg-purple-50 p-4">
+                        <p className="text-xs font-bold uppercase text-purple-400">
+                            Recommended protein
+                        </p>
+                        <p className="mt-1 text-2xl font-black text-rose-950">
+                            {recommendedProtein ? `${recommendedProtein} g` : "—"}
+                        </p>
+                        <p className="mt-1 text-sm font-bold text-rose-500">
+                            based on latest weight × 1.6g
+                        </p>
+                    </div>
+
                     {(!heightCm || !birthDate || !sex) && (
                         <a
                             href="/settings"
@@ -759,7 +766,7 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                     <h2 className="text-3xl font-black text-pink-500">
                         Household weight progress ♡
                     </h2>
@@ -771,7 +778,7 @@ export default function DashboardPage() {
                             </p>
                         ) : (
                             <>
-                                <svg viewBox="0 0 300 130" className="h-48 w-full">
+                                <svg viewBox="0 0 300 130" className="h-56 w-full overflow-visible">
                                     {weightUsers.map((user, userIndex) => {
                                         const logs = getUserLogs(user.id);
                                         const color = userColors[userIndex % userColors.length];
@@ -793,13 +800,36 @@ export default function DashboardPage() {
                                                     const point = getPoint(logs, log, index);
 
                                                     return (
-                                                        <circle
-                                                            key={log.id}
-                                                            cx={point.x}
-                                                            cy={point.y}
-                                                            r="5"
-                                                            fill={color}
-                                                        />
+                                                        <g key={log.id} className="group">
+                                                            <circle
+                                                                cx={point.x}
+                                                                cy={point.y}
+                                                                r="12"
+                                                                fill="transparent"
+                                                                className="cursor-pointer"
+                                                            />
+
+                                                            <circle
+                                                                cx={point.x}
+                                                                cy={point.y}
+                                                                r="6"
+                                                                fill={color}
+                                                                className="pointer-events-none"
+                                                            />
+
+                                                            <foreignObject
+                                                                x={point.x - 55}
+                                                                y={point.y - 48}
+                                                                width="110"
+                                                                height="42"
+                                                                className="pointer-events-none opacity-0 transition group-hover:opacity-100"
+                                                            >
+                                                                <div className="rounded-xl bg-white px-3 py-2 text-center text-xs font-black text-rose-700 shadow-lg">
+                                                                    <p>{log.date}</p>
+                                                                    <p>{log.weight} kg</p>
+                                                                </div>
+                                                            </foreignObject>
+                                                        </g>
                                                     );
                                                 })}
                                             </g>
@@ -816,8 +846,7 @@ export default function DashboardPage() {
                                             <span
                                                 className="h-3 w-3 rounded-full"
                                                 style={{
-                                                    backgroundColor:
-                                                        userColors[index % userColors.length],
+                                                    backgroundColor: userColors[index % userColors.length],
                                                 }}
                                             />
                                             {user.name}
@@ -844,26 +873,55 @@ export default function DashboardPage() {
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {myWeightLogs.length >= 2
-                                    ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(
-                                        1
-                                    )} kg`
+                                    ? `${weightChange > 0 ? "+" : ""}${weightChange.toFixed(1)} kg`
                                     : "—"}
                             </p>
                         </div>
                     </div>
+                    <div className="mt-4 rounded-2xl bg-pink-50 p-4">
+                        <p className="text-xs font-bold uppercase text-pink-400">
+                            Weight lost this month
+                        </p>
 
-                    <div className="mt-5 space-y-2">
-                        {myWeightLogs.slice(-5).map((log) => (
-                            <div
-                                key={log.id}
-                                className="flex justify-between rounded-2xl bg-purple-50 p-3 text-sm font-bold text-rose-700"
-                            >
-                                <span>{log.profiles?.full_name ?? name ?? "You"}</span>
-                                <span>
-                                    {log.weight} kg · {log.date}
-                                </span>
-                            </div>
-                        ))}
+                        <p className="mt-1 text-2xl font-black text-rose-950">
+                            {(() => {
+                                const currentMonth = new Date().getMonth();
+                                const currentYear = new Date().getFullYear();
+
+                                const monthlyLogs = myWeightLogs.filter((log) => {
+                                    const logDate = new Date(log.date);
+
+                                    return (
+                                        logDate.getMonth() === currentMonth &&
+                                        logDate.getFullYear() === currentYear
+                                    );
+                                });
+
+                                if (monthlyLogs.length < 2) {
+                                    return "—";
+                                }
+
+                                const firstWeight = monthlyLogs[0].weight;
+                                const latestWeight =
+                                    monthlyLogs[monthlyLogs.length - 1].weight;
+
+                                const difference = latestWeight - firstWeight;
+
+                                if (difference < 0) {
+                                    return `${Math.abs(difference).toFixed(1)} kg lost`;
+                                }
+
+                                if (difference > 0) {
+                                    return `${difference.toFixed(1)} kg gained`;
+                                }
+
+                                return "No change";
+                            })()}
+                        </p>
+
+                        <p className="mt-1 text-sm font-bold text-rose-500">
+                            {new Date().toLocaleString("default", { month: "long" })} progress
+                        </p>
                     </div>
                 </div>
             </section>
