@@ -43,6 +43,7 @@ export default function SettingsPage() {
     const [proteinTarget, setProteinTarget] = useState("");
     const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
     const [goalWeight, setGoalWeight] = useState("");
+    const [goalStartWeight, setGoalStartWeight] = useState("");
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -54,7 +55,7 @@ export default function SettingsPage() {
             const { data } = await supabase
                 .from("profiles")
                 .select(
-                    "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode, goal_weight"
+                    "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode, goal_weight, goal_start_weight"
                 )
                 .eq("id", userId)
                 .maybeSingle();
@@ -67,6 +68,7 @@ export default function SettingsPage() {
             setProteinTarget(data?.protein_target ? String(data.protein_target) : "");
             setProteinTargetMode(data?.protein_target_mode === "manual" ? "manual" : "auto");
             setGoalWeight(data?.goal_weight ? String(data.goal_weight) : "");
+            setGoalStartWeight(data?.goal_start_weight ? String(data.goal_start_weight) : "");
 
             if (data?.birth_date) {
                 const [year, month, day] = data.birth_date.split("-");
@@ -101,6 +103,7 @@ export default function SettingsPage() {
             calorie_target_mode: calorieTargetMode,
             protein_target_mode: proteinTargetMode,
             goal_weight: goalWeight ? Number(goalWeight) : null,
+            goal_start_weight: goalStartWeight ? Number(goalStartWeight) : null,
         });
 
         if (error) {
@@ -233,22 +236,39 @@ export default function SettingsPage() {
                     Choose automatic calorie goals or set your own fixed target.
                 </p>
 
-                <div className="mt-6">
-                    <label className="text-sm font-black uppercase tracking-wide text-pink-400">
-                        Goal weight in kg:
-                    </label>
+                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                    <div>
+                        <label className="text-sm font-black uppercase tracking-wide text-pink-400">
+                            Goal weight in kg:
+                        </label>
 
-                    <input
-                        type="number"
-                        step="0.1"
-                        value={goalWeight}
-                        onChange={(event) => setGoalWeight(event.target.value)}
-                        placeholder="Example: 65"
-                        className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
-                    />
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={goalWeight}
+                            onChange={(event) => setGoalWeight(event.target.value)}
+                            placeholder="Example: 65"
+                            className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                        />
+                    </div>
 
-                    <p className="mt-2 text-sm font-semibold text-rose-400">
-                        Used on your dashboard to estimate progress toward your goal.
+                    <div>
+                        <label className="text-sm font-black uppercase tracking-wide text-rose-400">
+                            Starting weight in kg:
+                        </label>
+
+                        <input
+                            type="number"
+                            step="0.1"
+                            value={goalStartWeight}
+                            onChange={(event) => setGoalStartWeight(event.target.value)}
+                            placeholder="Example: 95"
+                            className="mt-2 w-full rounded-2xl bg-rose-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
+                        />
+                    </div>
+
+                    <p className="text-sm font-semibold text-rose-400 md:col-span-2">
+                        Used on your dashboard to estimate progress and unlock goal milestones.
                     </p>
                 </div>
 

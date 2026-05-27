@@ -114,6 +114,8 @@ export default function DashboardPage() {
     const [calorieTargetMode, setCalorieTargetMode] = useState<"auto" | "manual">("auto");
     const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
     const [goalWeight, setGoalWeight] = useState<number | null>(null);
+    const [goalStartWeight, setGoalStartWeight] = useState<number | null>(null);
+    const [showGoalAchievement, setShowGoalAchievement] = useState(false);
 
     const loadDashboard = async () => {
         const { data: sessionData } = await supabase.auth.getSession();
@@ -126,7 +128,7 @@ export default function DashboardPage() {
         const { data: profileData } = await supabase
             .from("profiles")
             .select(
-                "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode, goal_weight"
+                "full_name, height_cm, birth_date, sex, calorie_target, protein_target, calorie_target_mode, protein_target_mode, goal_weight, goal_start_weight"
             )
             .eq("id", currentUserId)
             .maybeSingle();
@@ -140,6 +142,7 @@ export default function DashboardPage() {
         setCalorieTargetMode(profileData?.calorie_target_mode === "manual" ? "manual" : "auto");
         setProteinTargetMode(profileData?.protein_target_mode === "manual" ? "manual" : "auto");
         setGoalWeight(profileData?.goal_weight ?? null);
+        setGoalStartWeight(profileData?.goal_start_weight ?? null);
 
         const currentHouseholdId = await getHouseholdId();
 
@@ -399,6 +402,61 @@ export default function DashboardPage() {
         goalWeightAligned && weeklyWeightChangeKg
             ? Math.abs(goalWeightDifference) / Math.abs(weeklyWeightChangeKg)
             : 0;
+    const goalStartDifference =
+        goalStartWeight && goalWeight ? goalStartWeight - goalWeight : 0;
+    const goalStartDirection =
+        !goalStartDifference ? "maintain" : goalStartDifference > 0 ? "lose" : "gain";
+    const goalTotalDistance = Math.abs(goalStartDifference);
+    const rawGoalProgress =
+        goalStartWeight && latestWeight
+            ? goalStartDirection === "lose"
+                ? goalStartWeight - latestWeight
+                : latestWeight - goalStartWeight
+            : 0;
+    const goalProgressKg = goalTotalDistance
+        ? Math.min(Math.max(rawGoalProgress, 0), goalTotalDistance)
+        : 0;
+    const goalMilestoneStep = goalTotalDistance <= 5 ? 1 : 5;
+    const goalMilestoneKg = goalTotalDistance
+        ? Math.floor(goalProgressKg / goalMilestoneStep) * goalMilestoneStep
+        : 0;
+    const nextGoalMilestoneKg = goalTotalDistance
+        ? Math.min(goalMilestoneKg + goalMilestoneStep, goalTotalDistance)
+        : 0;
+    const goalProgressPercent = goalTotalDistance
+        ? Math.min((goalProgressKg / goalTotalDistance) * 100, 100)
+        : 0;
+    const goalAchievementMessage =
+        goalMilestoneKg >= goalTotalDistance
+            ? "Goal reached. That is a huge moment."
+            : goalMilestoneKg >= 10
+                ? "You are building real momentum."
+                : goalMilestoneKg >= 5
+                    ? "That progress is starting to stack up."
+                    : "Small steps count. This one counts too.";
+
+    useEffect(() => {
+        if (!userId || !goalStartWeight || !goalWeight || goalMilestoneKg <= 0) {
+            setShowGoalAchievement(false);
+            return;
+        }
+
+        const achievementKey = [
+            "macrobudget-goal-achievement",
+            userId,
+            goalStartWeight,
+            goalWeight,
+            goalMilestoneKg,
+        ].join("-");
+
+        if (localStorage.getItem(achievementKey)) {
+            setShowGoalAchievement(false);
+            return;
+        }
+
+        localStorage.setItem(achievementKey, "seen");
+        setShowGoalAchievement(true);
+    }, [goalMilestoneKg, goalStartWeight, goalWeight, userId]);
 
     const bmiLabel = !bmi
         ? "Add height in settings"
@@ -762,7 +820,43 @@ export default function DashboardPage() {
                                             ? `${Math.abs(goalWeightDifference).toFixed(1)} kg to ${goalWeightDirection}; around ${Math.ceil(estimatedGoalWeeks)} weeks`
                                             : "Adjust your calorie target to estimate this goal."}
                         </p>
+
+                        {goalStartWeight && goalWeight && latestWeight ? (
+                            <div className="mt-4">
+                                <div className="flex justify-between text-xs font-black uppercase text-rose-400">
+                                    <span>Progress</span>
+                                    <span>{goalProgressKg.toFixed(1)} / {goalTotalDistance.toFixed(1)} kg</span>
+                                </div>
+
+                                <div className="mt-2 h-3 overflow-hidden rounded-full bg-white">
+                                    <div
+                                        className="h-full rounded-full bg-pink-400 transition-all"
+                                        style={{ width: `${goalProgressPercent}%` }}
+                                    />
+                                </div>
+
+                                <p className="mt-2 text-xs font-bold text-rose-400">
+                                    Next achievement at {nextGoalMilestoneKg.toFixed(1)} kg progress.
+                                </p>
+                            </div>
+                        ) : null}
                     </div>
+
+                    {showGoalAchievement && (
+                        <div className="mt-3 animate-pulse rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
+                            <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
+                                Achievement unlocked
+                            </p>
+
+                            <p className="mt-1 text-2xl font-black">
+                                {goalMilestoneKg.toFixed(0)} kg closer ♡
+                            </p>
+
+                            <p className="mt-1 text-sm font-bold text-pink-50">
+                                {goalAchievementMessage}
+                            </p>
+                        </div>
+                    )}
 
                     <div className="mt-3 rounded-2xl bg-orange-50 p-4">
                         <p className="text-xs font-bold uppercase text-orange-400">
