@@ -338,6 +338,7 @@ export default function DashboardPage() {
     const myWeightLogs = weightLogs.filter((log) => log.user_id === userId);
     const latestWeight = myWeightLogs.at(-1)?.weight ?? 0;
     const age = birthDate ? calculateAge(birthDate) : 0;
+    const hasFitnessProfile = Boolean(heightCm && birthDate && sex);
 
     const bmi = useMemo(() => {
         const height = Number(heightCm);
@@ -396,6 +397,16 @@ export default function DashboardPage() {
     const proteinProgress = activeProteinTarget
         ? Math.min((todayProtein / activeProteinTarget) * 100, 100)
         : 0;
+    const calorieProgressWidth = hasFitnessProfile
+        ? calorieProgress
+        : todayCalories > 0
+            ? 100
+            : 0;
+    const proteinProgressWidth = hasFitnessProfile
+        ? proteinProgress
+        : todayProtein > 0
+            ? 100
+            : 0;
 
     const dailyDeficit =
         recommendedCalories && activeCalorieTarget
@@ -501,6 +512,26 @@ export default function DashboardPage() {
         loadDashboard();
     };
 
+    const deleteWeightLog = async (log: WeightLog) => {
+        const shouldDelete = window.confirm(
+            `Remove the ${log.weight} kg entry from ${log.date}?`
+        );
+
+        if (!shouldDelete) return;
+
+        const { error } = await supabase
+            .from("weight_logs")
+            .delete()
+            .eq("id", log.id);
+
+        if (error) {
+            alert(error.message);
+            return;
+        }
+
+        loadDashboard();
+    };
+
     const userColors = [
         "#3b82f6",
         "#ec4899",
@@ -555,54 +586,58 @@ export default function DashboardPage() {
             .join(" ");
 
     return (
-        <main className="mx-auto max-w-6xl p-6">
-            <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+        <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
+            <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     dashboard
                 </p>
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
+                <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
                     Welcome, {name} ♡
                 </h1>
 
-                <p className="mt-3 text-lg font-semibold text-rose-600">
+                <p className="mt-3 text-base font-semibold text-rose-600 sm:text-lg">
                     Today&apos;s plan, costs, shopping and progress.
                 </p>
             </section>
 
             <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[2rem] bg-orange-50 p-6 shadow-sm">
+                <div className="rounded-[2rem] bg-orange-50 p-5 shadow-sm sm:p-6">
                     <Utensils className="text-orange-400" />
                     <p className="mt-3 text-sm font-black uppercase text-orange-400">
                         Calories
                     </p>
-                    <p className="mt-2 text-4xl font-black text-rose-950">
+                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
                         {Math.round(todayCalories)}
                     </p>
                     <p className="text-sm font-semibold text-rose-500">
-                        of {activeCalorieTarget || "—"} kcal
+                        {hasFitnessProfile
+                            ? `of ${activeCalorieTarget || "—"} kcal`
+                            : "tracked today"}
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-purple-50 p-6 shadow-sm">
+                <div className="rounded-[2rem] bg-purple-50 p-5 shadow-sm sm:p-6">
                     <Sparkles className="text-purple-400" />
                     <p className="mt-3 text-sm font-black uppercase text-purple-400">
                         Protein
                     </p>
-                    <p className="mt-2 text-4xl font-black text-rose-950">
+                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
                         {todayProtein.toFixed(1)}g
                     </p>
                     <p className="text-sm font-semibold text-rose-500">
-                        of {activeProteinTarget || "—"}g
+                        {hasFitnessProfile
+                            ? `of ${activeProteinTarget || "—"}g`
+                            : "tracked today"}
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-pink-50 p-6 shadow-sm">
+                <div className="rounded-[2rem] bg-pink-50 p-5 shadow-sm sm:p-6">
                     <LineChart className="text-pink-400" />
                     <p className="mt-3 text-sm font-black uppercase text-pink-400">
                         Daily cost
                     </p>
-                    <p className="mt-2 text-4xl font-black text-rose-950">
+                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
                         {todayCost.toFixed(2)}€
                     </p>
                     <p className="text-sm font-semibold text-rose-500">
@@ -610,19 +645,19 @@ export default function DashboardPage() {
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-rose-50 p-6 shadow-sm">
+                <div className="rounded-[2rem] bg-rose-50 p-5 shadow-sm sm:p-6">
                     <LineChart className="text-rose-400" />
                     <p className="mt-3 text-sm font-black uppercase text-rose-400">
                         Weekly cost
                     </p>
-                    <p className="mt-2 text-4xl font-black text-rose-950">
+                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
                         {weeklyCost.toFixed(2)}€
                     </p>
                     <p className="text-sm font-semibold text-rose-500">next 7 days</p>
                 </div>
             </section>
 
-            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                 <h2 className="text-3xl font-black text-pink-500">Daily goals ♡</h2>
 
                 <div className="mt-5 space-y-5">
@@ -630,21 +665,25 @@ export default function DashboardPage() {
                         <div className="flex justify-between text-sm font-black text-rose-700">
                             <span>Calories</span>
                             <span>
-                                {Math.round(todayCalories)} / {activeCalorieTarget || "—"} kcal
+                                {hasFitnessProfile
+                                    ? `${Math.round(todayCalories)} / ${activeCalorieTarget || "—"} kcal`
+                                    : `${Math.round(todayCalories)} kcal tracked`}
                             </span>
                         </div>
 
                         <div className="mt-2 h-4 overflow-hidden rounded-full bg-orange-50">
                             <div
                                 className="h-full rounded-full bg-orange-400 transition-all"
-                                style={{ width: `${calorieProgress}%` }}
+                                style={{ width: `${calorieProgressWidth}%` }}
                             />
                         </div>
 
                         <p className="mt-2 text-sm font-semibold text-rose-500">
-                            {calorieTargetMode === "auto"
-                                ? "Auto target updates with your latest weight."
-                                : "Manual target is fixed from settings."}
+                            {hasFitnessProfile
+                                ? calorieTargetMode === "auto"
+                                    ? "Auto target updates with your latest weight."
+                                    : "Manual target is fixed from settings."
+                                : "Add your fitness details in settings to unlock a calorie target."}
                         </p>
                     </div>
 
@@ -652,21 +691,25 @@ export default function DashboardPage() {
                         <div className="flex justify-between text-sm font-black text-rose-700">
                             <span>Protein</span>
                             <span>
-                                {todayProtein.toFixed(1)} / {activeProteinTarget || "—"}g
+                                {hasFitnessProfile
+                                    ? `${todayProtein.toFixed(1)} / ${activeProteinTarget || "—"}g`
+                                    : `${todayProtein.toFixed(1)}g tracked`}
                             </span>
                         </div>
 
                         <div className="mt-2 h-4 overflow-hidden rounded-full bg-purple-50">
                             <div
                                 className="h-full rounded-full bg-purple-400 transition-all"
-                                style={{ width: `${proteinProgress}%` }}
+                                style={{ width: `${proteinProgressWidth}%` }}
                             />
                         </div>
 
                         <p className="mt-2 text-sm font-semibold text-rose-500">
-                            {proteinTargetMode === "auto"
-                                ? "Auto target uses latest weight × 1.6g."
-                                : "Manual protein target is fixed from settings."}
+                            {hasFitnessProfile
+                                ? proteinTargetMode === "auto"
+                                    ? "Auto target uses latest weight × 1.6g."
+                                    : "Manual protein target is fixed from settings."
+                                : "Add your fitness details in settings to unlock a protein target."}
                         </p>
                     </div>
 
@@ -676,8 +719,8 @@ export default function DashboardPage() {
                         </p>
 
                         <p className="mt-1 text-2xl font-black text-rose-950">
-                            {!recommendedCalories || !activeCalorieTarget
-                                ? "—"
+                            {!hasFitnessProfile || !recommendedCalories || !activeCalorieTarget
+                                ? "Add settings info ✨"
                                 : weeklyWeightChangeKg > 0
                                     ? `-${weeklyWeightChangeKg.toFixed(2)} kg/week`
                                     : weeklyWeightChangeKg < 0
@@ -686,14 +729,16 @@ export default function DashboardPage() {
                         </p>
 
                         <p className="mt-1 text-sm font-bold text-rose-500">
-                            based on calorie target vs estimated maintenance
+                            {hasFitnessProfile
+                                ? "based on calorie target vs estimated maintenance"
+                                : "We will estimate this after you add your fitness details in settings."}
                         </p>
                     </div>
                 </div>
             </section>
 
             <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-                <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <h2 className="text-3xl font-black text-pink-500">
                         Today&apos;s meal plan ♡
                     </h2>
@@ -738,7 +783,7 @@ export default function DashboardPage() {
                     </a>
                 </div>
 
-                <div className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <h2 className="text-3xl font-black text-pink-500">
                         Shopping preview ♡
                     </h2>
@@ -781,10 +826,12 @@ export default function DashboardPage() {
             </section>
 
             <section className="mt-8 grid items-stretch gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-                <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                {hasFitnessProfile ? (
+                    <>
+                        <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <Scale className="text-pink-400" />
 
-                    <h2 className="mt-3 text-3xl font-black text-pink-500">
+                    <h2 className="mt-3 text-2xl font-black text-pink-500 sm:text-3xl">
                         Daily weight ♡
                     </h2>
 
@@ -929,35 +976,37 @@ export default function DashboardPage() {
                     )}
                 </div>
 
-                <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                    <h2 className="text-3xl font-black text-pink-500">
+                <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
+                    <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
                         Household weight progress ♡
                     </h2>
 
-                    <div className="mt-5 flex min-h-[22rem] flex-1 flex-col rounded-2xl bg-pink-50 p-4">
-                        {weightLogs.length < 2 ? (
+                    <div className="mt-5 flex min-h-[18rem] flex-1 flex-col rounded-2xl bg-pink-50 p-3 sm:min-h-[22rem] sm:p-4">
+                        {weightLogs.length === 0 ? (
                             <p className="flex flex-1 items-center justify-center text-center font-semibold text-rose-400">
-                                Log at least 2 weights to see household progress.
+                                Log your first weight to start the graph.
                             </p>
                         ) : (
                             <>
-                                <svg viewBox="0 0 300 130" className="h-72 w-full flex-1 overflow-visible">
+                                <svg viewBox="0 0 300 130" className="h-56 w-full flex-1 overflow-visible sm:h-72">
                                     {weightUsers.map((user, userIndex) => {
                                         const logs = getUserLogs(user.id);
                                         const color = userColors[userIndex % userColors.length];
 
-                                        if (logs.length < 2) return null;
+                                        if (logs.length === 0) return null;
 
                                         return (
                                             <g key={user.id}>
-                                                <polyline
-                                                    fill="none"
-                                                    stroke={color}
-                                                    strokeWidth="5"
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    points={getPoints(logs)}
-                                                />
+                                                {logs.length >= 2 ? (
+                                                    <polyline
+                                                        fill="none"
+                                                        stroke={color}
+                                                        strokeWidth="5"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        points={getPoints(logs)}
+                                                    />
+                                                ) : null}
 
                                                 {logs.map((log, index) => {
                                                     const point = getPoint(logs, log, index);
@@ -970,6 +1019,7 @@ export default function DashboardPage() {
                                                                 r="12"
                                                                 fill="transparent"
                                                                 className="cursor-pointer"
+                                                                onClick={() => deleteWeightLog(log)}
                                                             />
 
                                                             <circle
@@ -977,7 +1027,8 @@ export default function DashboardPage() {
                                                                 cy={point.y}
                                                                 r="6"
                                                                 fill={color}
-                                                                className="pointer-events-none"
+                                                                className="cursor-pointer"
+                                                                onClick={() => deleteWeightLog(log)}
                                                             />
 
                                                             <foreignObject
@@ -1016,6 +1067,12 @@ export default function DashboardPage() {
                                         </div>
                                     ))}
                                 </div>
+
+                                {weightLogs.length === 1 ? (
+                                    <p className="mt-4 text-center text-sm font-bold text-rose-400">
+                                        Your first weight entry is in. Log another one to draw the trend line ♡
+                                    </p>
+                                ) : null}
                             </>
                         )}
                     </div>
@@ -1087,6 +1144,26 @@ export default function DashboardPage() {
                         </p>
                     </div>
                 </div>
+                    </>
+                ) : (
+                    <div className="rounded-[2rem] border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-rose-50 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)] lg:col-span-2 sm:p-8">
+                        <p className="text-sm font-black uppercase tracking-[0.35em] text-pink-400">
+                            Fitness insights
+                        </p>
+                        <h2 className="mt-3 text-3xl font-black text-pink-500 sm:text-4xl">
+                            More fitness info is waiting ✨
+                        </h2>
+                        <p className="mt-3 max-w-2xl text-base font-semibold text-rose-600 sm:text-lg">
+                            For more fitness information, go to settings and input some information ♡
+                        </p>
+                        <a
+                            href="/settings"
+                            className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-pink-500 px-6 py-3 text-base font-black text-white transition hover:bg-pink-600 sm:w-auto"
+                        >
+                            Go to settings
+                        </a>
+                    </div>
+                )}
             </section>
         </main>
     );
