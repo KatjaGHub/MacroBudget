@@ -12,9 +12,9 @@ export async function getHouseholdId() {
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (error) return null;
+  if (error || !data) return null;
 
   return data.household_id as number;
 }

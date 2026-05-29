@@ -20,13 +20,18 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const { data } = await supabase.auth.getSession();
+      const sessionResult = await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<{ data: { session: null } }>((resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 4000)
+        ),
+      ]);
 
       if (!active) return;
 
-      if (!data.session) {
+      if (!sessionResult.data.session) {
         setLoading(false);
-        router.replace("/login");
+        window.location.replace("/login");
         return;
       }
 

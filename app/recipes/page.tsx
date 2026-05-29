@@ -154,13 +154,13 @@ export default function RecipesPage() {
     }));
 
     return (
-        <main className="mx-auto max-w-6xl p-6">
-            <section className="rounded-[2rem] border border-pink-100 bg-white/70 p-8 shadow-sm backdrop-blur">
+        <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
+            <section className="rounded-[2rem] border border-pink-100 bg-white/70 p-5 shadow-sm backdrop-blur sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     recipe collection
                 </p>
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
+                <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
                     Recipes ♡
                 </h1>
 
@@ -178,7 +178,7 @@ export default function RecipesPage() {
 
                     <Link
                         href="/create-recipe"
-                        className="flex h-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
+                        className="flex h-12 items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                     >
                         <Plus size={20} strokeWidth={3} />
                         Create recipe
@@ -200,7 +200,7 @@ export default function RecipesPage() {
 
             <section className="mt-8 space-y-10">
                 {loading ? (
-                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                             loading
                         </p>
@@ -212,7 +212,7 @@ export default function RecipesPage() {
                         </p>
                     </div>
                 ) : recipes.length === 0 ? (
-                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                             empty cookbook
                         </p>
@@ -231,7 +231,7 @@ export default function RecipesPage() {
                         </Link>
                     </div>
                 ) : groupedRecipes.length === 0 ? (
-                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                             no matches
                         </p>
@@ -249,7 +249,7 @@ export default function RecipesPage() {
                             id={`recipe-letter-${group.letter}`}
                             className="scroll-mt-24"
                         >
-                            <h2 className="mb-4 text-3xl font-black text-pink-500">
+                            <h2 className="mb-4 text-2xl font-black text-pink-500 sm:text-3xl">
                                 {group.letter} ♡
                             </h2>
 
@@ -257,9 +257,9 @@ export default function RecipesPage() {
                                 {group.items.map((recipe) => (
                                     <article
                                         key={recipe.id}
-                                        className="rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.18)]"
+                                        className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.18)] sm:p-6"
                                     >
-                                        <div className="flex items-start justify-between gap-4">
+                                        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                                             <div>
                                                 <h3 className="text-2xl font-black text-rose-950">
                                                     {recipe.name}
@@ -270,7 +270,7 @@ export default function RecipesPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex flex-wrap items-center gap-2">
                                                 <button
                                                     onClick={() =>
                                                         handleDeleteRecipe(recipe.id, recipe.name)
@@ -290,7 +290,7 @@ export default function RecipesPage() {
                                             </div>
                                         </div>
 
-                                        <div className="mt-6 grid grid-cols-3 gap-3">
+                                        <div className="mt-6 grid gap-3 sm:grid-cols-3">
                                             <div className="rounded-2xl bg-pink-50 p-4 text-center">
                                                 <p className="text-xs font-bold uppercase text-pink-400">
                                                     Cost

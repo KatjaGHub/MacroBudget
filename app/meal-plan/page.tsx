@@ -119,11 +119,20 @@ export default function MealPlanPage() {
         .eq("user_id", userId)
         .order("created_at", { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
       if (membershipError) {
         setLoading(false);
         alert(membershipError.message);
+        return;
+      }
+
+      if (!membershipData) {
+        setHouseholdId(null);
+        setIngredients([]);
+        setRecipes([]);
+        setPlanItems([]);
+        setLoading(false);
         return;
       }
 
@@ -363,17 +372,18 @@ export default function MealPlanPage() {
   };
 
   const availableItems = itemType === "recipe" ? recipes : ingredients;
+  const hasHousehold = householdId !== null;
   const hasPlannerOptions = recipes.length > 0 || ingredients.length > 0;
 
   return (
-    <main className="mx-auto max-w-6xl p-6">
+    <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
       {loading ? (
-        <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+        <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
             loading
           </p>
 
-          <h1 className="mt-2 text-4xl font-black text-pink-500">
+          <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-4xl">
             Loading meal plan ♡
           </h1>
 
@@ -385,16 +395,16 @@ export default function MealPlanPage() {
         <>
 
 
-      <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+      <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-6">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
           selected day
         </p>
 
-        <h2 className="mt-2 text-4xl font-black text-pink-500">
+        <h2 className="mt-2 text-3xl font-black text-pink-500 sm:text-4xl">
           {selectedDayLabel} ♡
         </h2>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl bg-orange-50 p-4">
             <p className="text-xs font-bold uppercase text-orange-400">
               Calories
@@ -423,7 +433,7 @@ export default function MealPlanPage() {
           </div>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-2">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
           {mealTypes.map((type) => {
             const items = selectedDayItems.filter(
               (item) => item.mealType === type
@@ -471,7 +481,7 @@ export default function MealPlanPage() {
                         return (
                           <div
                             key={item.id}
-                            className="flex items-center justify-between gap-4 rounded-xl bg-white p-3"
+                            className="flex flex-col gap-3 rounded-xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                           >
                             <div>
                               <p className="font-black text-rose-950">
@@ -515,7 +525,7 @@ export default function MealPlanPage() {
         </div>
       </section>
 
-      <section className="mt-8 flex items-center justify-between rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+      <section className="mt-8 flex items-center justify-between gap-3 rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
         <button
           onClick={() => setWeekOffset((current) => current - 1)}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-100 text-pink-500 transition hover:bg-pink-200"
@@ -527,7 +537,7 @@ export default function MealPlanPage() {
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-400">
             week
           </p>
-          <p className="mt-1 text-lg font-black text-rose-950">{weekLabel}</p>
+          <p className="mt-1 text-sm font-black text-rose-950 sm:text-lg">{weekLabel}</p>
         </div>
 
         <button
@@ -538,7 +548,7 @@ export default function MealPlanPage() {
         </button>
       </section>
 
-      <section className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-7">
+      <section className="mt-8 grid gap-3 grid-cols-2 lg:grid-cols-7">
         {weekDays.map((day) => (
           <button
             key={day.date}
@@ -558,8 +568,8 @@ export default function MealPlanPage() {
         ))}
       </section>
 
-      <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-        <h2 className="text-3xl font-black text-pink-500">
+      <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
+        <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
           Add to plan ♡
         </h2>
 
@@ -567,7 +577,16 @@ export default function MealPlanPage() {
           Adding to: {selectedDayLabel}
         </p>
 
-        {!hasPlannerOptions ? (
+        {!hasHousehold ? (
+          <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
+            <p className="text-lg font-black text-pink-500">
+              No household yet â™ˇ
+            </p>
+            <p className="mt-2 font-semibold text-rose-500">
+              Join or create a household first to plan meals together.
+            </p>
+          </div>
+        ) : !hasPlannerOptions ? (
           <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
             <p className="text-lg font-black text-pink-500">
               Nothing to add yet ♡
@@ -578,7 +597,7 @@ export default function MealPlanPage() {
           </div>
         ) : (
           <>
-            <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
                   Meal

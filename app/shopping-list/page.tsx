@@ -21,6 +21,17 @@ type Profile = {
     full_name: string;
 };
 
+function createChannelSuffix() {
+    if (
+        typeof globalThis.crypto !== "undefined" &&
+        typeof globalThis.crypto.randomUUID === "function"
+    ) {
+        return globalThis.crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function ShoppingListPage() {
     const [items, setItems] = useState<ShoppingItem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -49,11 +60,20 @@ export default function ShoppingListPage() {
                 .eq("user_id", currentUserId)
                 .order("created_at", { ascending: false })
                 .limit(1)
-                .single();
+                .maybeSingle();
 
             if (membershipError) {
                 setLoading(false);
                 alert(membershipError.message);
+                return;
+            }
+
+            if (!membershipData) {
+                if (isMounted) {
+                    setHouseholdId(null);
+                    setItems([]);
+                    setLoading(false);
+                }
                 return;
             }
 
@@ -106,7 +126,7 @@ export default function ShoppingListPage() {
 
             await loadItems();
 
-            channelName = `shopping-list-${currentHouseholdId}-${crypto.randomUUID()}`;
+            channelName = `shopping-list-${currentHouseholdId}-${createChannelSuffix()}`;
 
             const realtimeChannel = supabase
                 .channel(channelName)
@@ -228,16 +248,17 @@ export default function ShoppingListPage() {
 
     const toBuyItems = items.filter((item) => !item.is_checked);
     const boughtItems = items.filter((item) => item.is_checked);
+    const hasHousehold = householdId !== null;
     const hasAnyItems = items.length > 0;
 
     return (
-        <main className="mx-auto max-w-2xl p-6">
+        <main className="mx-auto max-w-2xl px-4 py-4 sm:p-6">
             <section className="pt-10">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     shared list
                 </p>
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
+                <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
                     Shopping List ♡
                 </h1>
 
@@ -247,7 +268,7 @@ export default function ShoppingListPage() {
             </section>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                <div className="flex gap-2">
+                <div className="grid gap-2 sm:grid-cols-[1fr_auto_auto]">
                     <input
                         value={newItem}
                         onChange={(event) => setNewItem(event.target.value)}
@@ -265,12 +286,12 @@ export default function ShoppingListPage() {
                             if (event.key === "Enter") addItem();
                         }}
                         placeholder="Qty"
-                        className="w-24 rounded-full bg-pink-50 px-4 py-4 text-center text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
+                        className="w-full rounded-full bg-pink-50 px-4 py-4 text-center text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300 sm:w-24"
                     />
 
                     <button
                         onClick={addItem}
-                        className="rounded-full bg-pink-500 px-5 text-2xl font-black text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
+                        className="rounded-full bg-pink-500 px-5 py-4 text-2xl font-black text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
                         aria-label="Add item"
                     >
                         +
@@ -291,6 +312,18 @@ export default function ShoppingListPage() {
                             Syncing your shared items.
                         </p>
                     </div>
+                ) : !hasHousehold ? (
+                    <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                        <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
+                            no household
+                        </p>
+                        <p className="mt-2 text-3xl font-black text-pink-500">
+                            Join a household first â™ˇ
+                        </p>
+                        <p className="mt-3 font-semibold text-rose-500">
+                            Create or join a household before using the shared shopping list.
+                        </p>
+                    </div>
                 ) : !hasAnyItems ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
@@ -309,7 +342,7 @@ export default function ShoppingListPage() {
                             {toBuyItems.map((item) => (
                                 <div
                                     key={item.id}
-                                    className="group flex items-center gap-4 rounded-2xl px-2 py-3 transition hover:bg-white/70"
+                                        className="group flex items-start gap-3 rounded-2xl px-2 py-3 transition hover:bg-white/70 sm:items-center sm:gap-4"
                                 >
                                     <button
                                         onClick={() => toggleBought(item)}
@@ -357,7 +390,7 @@ export default function ShoppingListPage() {
                                     {boughtItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="group flex items-center gap-4 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60"
+                                        className="group flex items-start gap-3 rounded-2xl px-2 py-3 opacity-60 transition hover:bg-white/60 sm:items-center sm:gap-4"
                                         >
                                             <button
                                                 onClick={() => toggleBought(item)}

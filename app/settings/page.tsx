@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
 import { Home, LogOut } from "lucide-react";
+import { getHouseholdId } from "@/lib/getHouseholdId";
 import { supabase } from "@/lib/supabase";
 
 const months = [
@@ -119,18 +120,57 @@ export default function SettingsPage() {
             return;
         }
 
-        alert("Profile saved ♡");
+        const startWeightValue = goalStartWeight ? Number(goalStartWeight) : null;
+
+        if (startWeightValue) {
+            const householdId = await getHouseholdId();
+
+            if (householdId) {
+                const { data: existingWeightLog } = await supabase
+                    .from("weight_logs")
+                    .select("id")
+                    .eq("user_id", userId)
+                    .order("date", { ascending: true })
+                    .limit(1)
+                    .maybeSingle();
+
+                if (!existingWeightLog) {
+                    const today = new Date();
+                    const date = [
+                        today.getFullYear(),
+                        String(today.getMonth() + 1).padStart(2, "0"),
+                        String(today.getDate()).padStart(2, "0"),
+                    ].join("-");
+
+                    const { error: weightLogError } = await supabase
+                        .from("weight_logs")
+                        .insert({
+                            household_id: householdId,
+                            user_id: userId,
+                            date,
+                            weight: startWeightValue,
+                        });
+
+                    if (weightLogError) {
+                        alert(weightLogError.message);
+                        return;
+                    }
+                }
+            }
+        }
+
+        alert("Profile saved ?");
     };
 
     return (
-        <main className="mx-auto max-w-3xl p-6">
+        <main className="mx-auto max-w-3xl px-4 py-4 sm:p-6">
             {loading ? (
-                <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+                <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                     <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                         loading
                     </p>
 
-                    <p className="mt-2 text-4xl font-black text-pink-500">
+                    <p className="mt-2 text-3xl font-black text-pink-500 sm:text-4xl">
                         Loading settings ♡
                     </p>
 
@@ -140,12 +180,12 @@ export default function SettingsPage() {
                 </section>
             ) : (
                 <>
-            <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+            <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     account
                 </p>
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
+                <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
                     Settings ♡
                 </h1>
 
@@ -154,7 +194,7 @@ export default function SettingsPage() {
                 </p>
             </section>
 
-            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                 <p className="text-2xl font-black text-pink-500">Profile ♡</p>
 
                 <p className="mt-1 text-sm font-semibold text-rose-500">
@@ -193,7 +233,7 @@ export default function SettingsPage() {
                         Birth date:
                     </label>
 
-                    <div className="mt-2 grid gap-3 md:grid-cols-3">
+                    <div className="mt-2 grid gap-3 sm:grid-cols-3">
                         <select
                             value={birthDay}
                             onChange={(event) => setBirthDay(event.target.value)}
@@ -253,14 +293,14 @@ export default function SettingsPage() {
                 </div>
             </section>
 
-            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                 <p className="text-2xl font-black text-pink-500">Goals ♡</p>
 
                 <p className="mt-1 text-sm font-semibold text-rose-500">
                     Choose automatic calorie goals or set your own fixed target.
                 </p>
 
-                <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
                     <div>
                         <label className="text-sm font-black uppercase tracking-wide text-pink-400">
                             Goal weight in kg:
@@ -291,12 +331,12 @@ export default function SettingsPage() {
                         />
                     </div>
 
-                    <p className="text-sm font-semibold text-rose-400 md:col-span-2">
+                    <p className="text-sm font-semibold text-rose-400 sm:col-span-2">
                         Used on your dashboard to estimate progress and unlock goal milestones.
                     </p>
                 </div>
 
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <button
                         type="button"
                         onClick={() => setCalorieTargetMode("auto")}
@@ -353,7 +393,7 @@ export default function SettingsPage() {
                     )}
                 </div>
 
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="mt-6 grid gap-3 sm:grid-cols-2">
                     <button
                         type="button"
                         onClick={() => setProteinTargetMode("auto")}
@@ -421,7 +461,7 @@ export default function SettingsPage() {
             <section className="mt-8 space-y-4">
                 <Link
                     href="/household"
-                    className="flex items-center justify-between rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] transition hover:bg-pink-50"
+                    className="flex items-center justify-between gap-4 rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)] transition hover:bg-pink-50 sm:p-5"
                 >
                     <div className="flex items-center gap-4">
                         <div className="rounded-full bg-pink-100 p-3 text-pink-500">
@@ -439,7 +479,7 @@ export default function SettingsPage() {
                     <span className="text-pink-400">→</span>
                 </Link>
 
-                <div className="flex items-center justify-between rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
+                <div className="flex items-center justify-between gap-4 rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-5">
                     <div className="flex items-center gap-4">
                         <div className="rounded-full bg-rose-100 p-3 text-rose-500">
                             <LogOut size={22} />

@@ -184,7 +184,7 @@ export default function CreateRecipePage() {
     };
 
     return (
-        <main className="mx-auto max-w-6xl p-6">
+        <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
             <Link
                 href="/recipes"
                 className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-pink-500 shadow-sm transition hover:bg-pink-50"
@@ -193,12 +193,12 @@ export default function CreateRecipePage() {
                 Back to recipes
             </Link>
 
-            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                     recipe builder
                 </p>
 
-                <h1 className="mt-2 text-5xl font-black text-pink-500">
+                <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
                     Create Recipe ♡
                 </h1>
 
@@ -209,8 +209,8 @@ export default function CreateRecipePage() {
             </section>
 
             <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
-                <div className="rounded-[2rem] border border-pink-100 bg-white/85 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-                    <div className="grid gap-5 md:grid-cols-[1fr_160px]">
+                <div className="rounded-[2rem] border border-pink-100 bg-white/85 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
+                    <div className="grid gap-5 sm:grid-cols-[1fr_160px]">
                         <div>
                             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
                                 Recipe name
@@ -241,7 +241,7 @@ export default function CreateRecipePage() {
                     </div>
 
                     <div className="mt-8">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-2xl font-black text-pink-500">
                                 Ingredients
                             </h2>
@@ -264,7 +264,7 @@ export default function CreateRecipePage() {
                                 return (
                                     <div
                                         key={ingredient.id}
-                                        className="grid gap-3 rounded-2xl bg-pink-50 p-3 md:grid-cols-[1fr_140px_auto]"
+                                        className="grid gap-3 rounded-2xl bg-pink-50 p-3 sm:grid-cols-[1fr_140px_auto]"
                                     >
                                         <div className="relative">
                                             <input
@@ -326,7 +326,7 @@ export default function CreateRecipePage() {
                                         </button>
 
                                         {selectedIngredient && (
-                                            <p className="md:col-span-3 text-sm font-semibold text-rose-500">
+                                            <p className="sm:col-span-3 text-sm font-semibold text-rose-500">
                                                 Amount in{" "}
                                                 {selectedIngredient.unit === "g" ? "grams" : "pieces"}
                                             </p>
@@ -358,7 +358,7 @@ export default function CreateRecipePage() {
                     </button>
                 </div>
 
-                <aside className="h-fit rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
+                <aside className="h-fit rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-6">
                     <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
                         recipe summary
                     </p>

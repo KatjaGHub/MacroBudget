@@ -4,6 +4,10 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
+function makeInviteCode() {
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const [mode, setMode] = useState<"login" | "register">("login");
@@ -50,6 +54,32 @@ export default function LoginPage() {
 
             if (profileError) {
                 alert(profileError.message);
+                return;
+            }
+
+            const { data: createdHousehold, error: householdError } = await supabase
+                .from("households")
+                .insert({
+                    name: `${fullName.trim() || "My"} Household`,
+                    invite_code: makeInviteCode(),
+                })
+                .select()
+                .single();
+
+            if (householdError) {
+                alert(householdError.message);
+                return;
+            }
+
+            const { error: membershipError } = await supabase
+                .from("household_members")
+                .insert({
+                    household_id: createdHousehold.id,
+                    user_id: data.user.id,
+                });
+
+            if (membershipError) {
+                alert(membershipError.message);
                 return;
             }
         }

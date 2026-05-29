@@ -601,7 +601,7 @@ export default function DashboardPage() {
                 </p>
             </section>
 
-            <section className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+            <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[2rem] bg-orange-50 p-5 shadow-sm sm:p-6">
                     <Utensils className="text-orange-400" />
                     <p className="mt-3 text-sm font-black uppercase text-orange-400">
