@@ -82,18 +82,18 @@ export default function CreateIngredientPage() {
               Ingredient type
             </label>
 
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
               {ingredientTypes.map((type) => (
                 <button
                   key={type.emoji}
                   type="button"
                   onClick={() => setEmoji(type.emoji)}
-                  className={`rounded-2xl border p-4 text-left transition ${emoji === type.emoji
+                  className={`rounded-2xl border p-3 text-left transition sm:p-4 ${emoji === type.emoji
                     ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
                     : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                     }`}
                 >
-                  <div className="text-3xl">{type.emoji}</div>
+                  <div className="text-2xl sm:text-3xl">{type.emoji}</div>
                   <p className="mt-2 text-sm font-black">{type.label}</p>
                 </button>
               ))}

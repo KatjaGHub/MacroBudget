@@ -289,6 +289,21 @@ export default function MealPlanPage() {
   const selectedDayTotals = getTotals(selectedDayItems);
   const selectedDayLabel = prettyDate(new Date(selectedDate));
 
+  const shiftSelectedDate = (days: number) => {
+    const nextDate = new Date(`${selectedDate}T12:00:00`);
+    nextDate.setDate(nextDate.getDate() + days);
+
+    const nextDateString = formatDate(nextDate);
+    const todayDate = new Date();
+    todayDate.setHours(12, 0, 0, 0);
+
+    const differenceMs = nextDate.getTime() - todayDate.getTime();
+    const differenceDays = Math.round(differenceMs / (1000 * 60 * 60 * 24));
+
+    setSelectedDate(nextDateString);
+    setWeekOffset(Math.floor(differenceDays / 7));
+  };
+
   const addMealItem = async () => {
     if (!selectedItemId) return;
 
@@ -527,28 +542,36 @@ export default function MealPlanPage() {
 
       <section className="mt-8 flex items-center justify-between gap-3 rounded-[2rem] border border-pink-100 bg-white p-4 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
         <button
-          onClick={() => setWeekOffset((current) => current - 1)}
+          onClick={() => shiftSelectedDate(-1)}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-100 text-pink-500 transition hover:bg-pink-200"
         >
           <ChevronLeft size={22} />
         </button>
 
         <div className="text-center">
-          <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-400">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-400 sm:hidden">
+            day
+          </p>
+          <p className="hidden text-xs font-bold uppercase tracking-[0.25em] text-pink-400 sm:block">
             week
           </p>
-          <p className="mt-1 text-sm font-black text-rose-950 sm:text-lg">{weekLabel}</p>
+          <p className="mt-1 text-sm font-black text-rose-950 sm:hidden">
+            {selectedDayLabel}
+          </p>
+          <p className="hidden mt-1 text-sm font-black text-rose-950 sm:text-lg sm:block">
+            {weekLabel}
+          </p>
         </div>
 
         <button
-          onClick={() => setWeekOffset((current) => current + 1)}
+          onClick={() => shiftSelectedDate(1)}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-pink-100 text-pink-500 transition hover:bg-pink-200"
         >
           <ChevronRight size={22} />
         </button>
       </section>
 
-      <section className="mt-8 grid gap-3 grid-cols-2 lg:grid-cols-7">
+      <section className="mt-8 hidden gap-3 sm:grid sm:grid-cols-2 lg:grid-cols-7">
         {weekDays.map((day) => (
           <button
             key={day.date}

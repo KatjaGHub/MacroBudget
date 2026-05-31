@@ -94,6 +94,17 @@ function calculateAge(birthDate: string) {
     return age;
 }
 
+function createChannelSuffix() {
+    if (
+        typeof globalThis.crypto !== "undefined" &&
+        typeof globalThis.crypto.randomUUID === "function"
+    ) {
+        return globalThis.crypto.randomUUID();
+    }
+
+    return `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function DashboardPage() {
     const [name, setName] = useState("");
     const [householdId, setHouseholdId] = useState<number | null>(null);
@@ -329,6 +340,32 @@ export default function DashboardPage() {
     useEffect(() => {
         loadDashboard();
     }, []);
+
+    useEffect(() => {
+        if (!householdId) return;
+
+        const channelName = `dashboard-shopping-${householdId}-${createChannelSuffix()}`;
+        const realtimeChannel = supabase
+            .channel(channelName)
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "shopping_items",
+                    filter: `household_id=eq.${householdId}`,
+                },
+                () => {
+                    loadDashboard();
+                }
+            );
+
+        realtimeChannel.subscribe();
+
+        return () => {
+            supabase.removeChannel(realtimeChannel);
+        };
+    }, [householdId]);
 
     const todayCalories = todayMeals.reduce((sum, meal) => sum + meal.calories, 0);
     const todayProtein = todayMeals.reduce((sum, meal) => sum + meal.protein, 0);
