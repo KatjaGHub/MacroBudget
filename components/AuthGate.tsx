@@ -1,12 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const router = useRouter();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,22 +19,29 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      const sessionResult = await Promise.race([
-        supabase.auth.getSession(),
-        new Promise<{ data: { session: null } }>((resolve) =>
-          setTimeout(() => resolve({ data: { session: null } }), 4000)
-        ),
-      ]);
+      try {
+        const sessionResult = await Promise.race([
+          supabase.auth.getSession(),
+          new Promise<{ data: { session: null } }>((resolve) =>
+            setTimeout(() => resolve({ data: { session: null } }), 4000)
+          ),
+        ]);
 
-      if (!active) return;
+        if (!active) return;
 
-      if (!sessionResult.data.session) {
+        if (!sessionResult.data.session) {
+          setLoading(false);
+          window.location.replace("/login");
+          return;
+        }
+
+        setLoading(false);
+      } catch {
+        if (!active) return;
+
         setLoading(false);
         window.location.replace("/login");
-        return;
       }
-
-      setLoading(false);
     };
 
     checkUser();
@@ -43,7 +49,7 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
     return () => {
       active = false;
     };
-  }, [pathname, router]);
+  }, [pathname]);
 
   if (loading) {
     return (
