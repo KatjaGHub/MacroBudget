@@ -224,6 +224,6 @@ The goal is not to make food tracking feel like homework. The goal is to make it
 
 ---
 
-## 🩷 Author
+## 🖋️ Author
 
 Made to make meal planning, weight goals, and food budgeting feel less chaotic and more like something you can actually keep doing.
