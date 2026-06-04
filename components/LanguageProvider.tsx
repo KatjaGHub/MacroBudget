@@ -72,10 +72,10 @@ export default function LanguageProvider({ children }: { children: ReactNode }) 
 
     if (!userId) return;
 
-    const { error } = await supabase.from("profiles").upsert({
-      id: userId,
-      language: nextLanguage,
-    });
+    const { error } = await supabase
+      .from("profiles")
+      .update({ language: nextLanguage })
+      .eq("id", userId);
 
     if (error) {
       alert(error.message);
