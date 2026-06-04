@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { LineChart, Scale, Sparkles, Utensils } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
@@ -338,7 +338,13 @@ export default function DashboardPage() {
     };
 
     useEffect(() => {
-        loadDashboard();
+        const timeoutId = window.setTimeout(() => {
+            loadDashboard();
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, []);
 
     useEffect(() => {
@@ -377,27 +383,17 @@ export default function DashboardPage() {
     const age = birthDate ? calculateAge(birthDate) : 0;
     const hasFitnessProfile = Boolean(heightCm && birthDate && sex);
 
-    const bmi = useMemo(() => {
-        const height = Number(heightCm);
-        if (!height || !latestWeight) return 0;
-
-        const heightMeters = height / 100;
-        return latestWeight / (heightMeters * heightMeters);
-    }, [heightCm, latestWeight]);
-
-    const healthyWeightRange = useMemo(() => {
-        const height = Number(heightCm);
-        if (!height) return null;
-
-        const heightMeters = height / 100;
-        return {
+    const height = Number(heightCm);
+    const heightMeters = height / 100;
+    const bmi =
+        height && latestWeight ? latestWeight / (heightMeters * heightMeters) : 0;
+    const healthyWeightRange = height
+        ? {
             min: 18.5 * heightMeters * heightMeters,
             max: 24.9 * heightMeters * heightMeters,
-        };
-    }, [heightCm]);
-
-    const recommendedCalories = useMemo(() => {
-        const height = Number(heightCm);
+        }
+        : null;
+    const recommendedCalories = (() => {
         const weight = Number(latestWeight);
 
         if (!height || !weight || !age) return 0;
@@ -413,7 +409,7 @@ export default function DashboardPage() {
         }
 
         return Math.round(bmr * 1.2);
-    }, [heightCm, latestWeight, age, sex]);
+    })();
 
     const recommendedProtein = latestWeight ? Math.round(latestWeight * 1.6) : 0;
 
@@ -495,26 +491,32 @@ export default function DashboardPage() {
                     : "Small steps count. This one counts too.";
 
     useEffect(() => {
-        if (!userId || !goalStartWeight || !goalWeight || goalMilestoneKg <= 0) {
-            setShowGoalAchievement(false);
-            return;
-        }
+        const timeoutId = window.setTimeout(() => {
+            if (!userId || !goalStartWeight || !goalWeight || goalMilestoneKg <= 0) {
+                setShowGoalAchievement(false);
+                return;
+            }
 
-        const achievementKey = [
-            "macrobudget-goal-achievement",
-            userId,
-            goalStartWeight,
-            goalWeight,
-            goalMilestoneKg,
-        ].join("-");
+            const achievementKey = [
+                "macrobudget-goal-achievement",
+                userId,
+                goalStartWeight,
+                goalWeight,
+                goalMilestoneKg,
+            ].join("-");
 
-        if (localStorage.getItem(achievementKey)) {
-            setShowGoalAchievement(false);
-            return;
-        }
+            if (localStorage.getItem(achievementKey)) {
+                setShowGoalAchievement(false);
+                return;
+            }
 
-        localStorage.setItem(achievementKey, "seen");
-        setShowGoalAchievement(true);
+            localStorage.setItem(achievementKey, "seen");
+            setShowGoalAchievement(true);
+        }, 0);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+        };
     }, [goalMilestoneKg, goalStartWeight, goalWeight, userId]);
 
     const bmiLabel = !bmi

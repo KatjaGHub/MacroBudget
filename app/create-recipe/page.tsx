@@ -22,6 +22,15 @@ type Ingredient = {
     cost: number;
 };
 
+function createRecipeIngredient(id: number): RecipeIngredient {
+    return {
+        id,
+        ingredientId: "",
+        search: "",
+        amount: 100,
+    };
+}
+
 export default function CreateRecipePage() {
     const [recipeName, setRecipeName] = useState("");
     const [servings, setServings] = useState(4);
@@ -31,7 +40,7 @@ export default function CreateRecipePage() {
     );
 
     const [ingredients, setIngredients] = useState<RecipeIngredient[]>([
-        { id: Date.now(), ingredientId: "", search: "", amount: 100 },
+        createRecipeIngredient(1),
     ]);
 
     useEffect(() => {
@@ -91,14 +100,11 @@ export default function CreateRecipePage() {
     };
 
     const addIngredient = () => {
-        setIngredients([
-            ...ingredients,
-            {
-                id: Date.now(),
-                ingredientId: "",
-                search: "",
-                amount: 100,
-            },
+        setIngredients((currentIngredients) => [
+            ...currentIngredients,
+            createRecipeIngredient(
+                Math.max(...currentIngredients.map((ingredient) => ingredient.id)) + 1
+            ),
         ]);
     };
 
