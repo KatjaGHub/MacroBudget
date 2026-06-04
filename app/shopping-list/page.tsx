@@ -318,7 +318,7 @@ export default function ShoppingListPage() {
                             no household
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Join a household first â™ˇ
+                            Join a household first ♡
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
                             Create or join a household before using the shared shopping list.
@@ -346,7 +346,7 @@ export default function ShoppingListPage() {
                                 >
                                     <button
                                         onClick={() => toggleBought(item)}
-                                        className="h-7 w-7 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
+                                        className="h-7 w-7 shrink-0 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
                                         aria-label={`Mark ${item.name} as bought`}
                                     />
 
@@ -354,7 +354,7 @@ export default function ShoppingListPage() {
                                         onClick={() => toggleBought(item)}
                                         className="min-w-0 flex-1 text-left"
                                     >
-                                        <p className="truncate text-xl font-black text-rose-950">
+                                        <p className="break-words text-xl font-black text-rose-950">
                                             {item.name}
                                         </p>
 
@@ -371,7 +371,7 @@ export default function ShoppingListPage() {
 
                                     <button
                                         onClick={() => deleteItem(item.id)}
-                                        className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
+                                        className="shrink-0 rounded-full p-2 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
                                         aria-label={`Delete ${item.name}`}
                                     >
                                         <Trash2 size={18} />
@@ -394,7 +394,7 @@ export default function ShoppingListPage() {
                                         >
                                             <button
                                                 onClick={() => toggleBought(item)}
-                                                className="flex h-7 w-7 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
+                                                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
                                                 aria-label={`Mark ${item.name} as not bought`}
                                             >
                                                 ✓
@@ -404,7 +404,7 @@ export default function ShoppingListPage() {
                                                 onClick={() => toggleBought(item)}
                                                 className="min-w-0 flex-1 text-left"
                                             >
-                                                <p className="truncate text-xl font-black text-rose-400 line-through">
+                                                <p className="break-words text-xl font-black text-rose-400 line-through">
                                                     {item.name}
                                                 </p>
 
@@ -421,7 +421,7 @@ export default function ShoppingListPage() {
 
                                             <button
                                                 onClick={() => deleteItem(item.id)}
-                                                className="rounded-full p-2 text-rose-300 opacity-0 transition hover:bg-rose-100 hover:text-rose-500 group-hover:opacity-100"
+                                                className="shrink-0 rounded-full p-2 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
                                                 aria-label={`Delete ${item.name}`}
                                             >
                                                 <Trash2 size={18} />

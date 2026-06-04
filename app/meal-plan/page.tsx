@@ -415,7 +415,7 @@ export default function MealPlanPage() {
           selected day
         </p>
 
-        <h2 className="mt-2 text-3xl font-black text-pink-500 sm:text-4xl">
+        <h2 className="mt-2 text-2xl font-black text-pink-500 sm:text-4xl">
           {selectedDayLabel} ♡
         </h2>
 
@@ -465,9 +465,9 @@ export default function MealPlanPage() {
                   onClick={() => toggleMeal(type)}
                   className="flex w-full items-center justify-between text-left"
                 >
-                  <div>
+                  <div className="min-w-0">
                     <p className="text-lg font-black text-rose-950">{type}</p>
-                    <p className="text-sm font-semibold text-rose-500">
+                    <p className="break-words text-sm font-semibold text-rose-500">
                       {items.length === 0
                         ? "No items planned"
                         : items
@@ -476,7 +476,7 @@ export default function MealPlanPage() {
                     </p>
                   </div>
 
-                  <span className="text-xl font-black text-pink-500">
+                  <span className="shrink-0 text-xl font-black text-pink-500">
                     {isExpanded ? "−" : "+"}
                   </span>
                 </button>
@@ -498,8 +498,8 @@ export default function MealPlanPage() {
                             key={item.id}
                             className="flex flex-col gap-3 rounded-xl bg-white p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
                           >
-                            <div>
-                              <p className="font-black text-rose-950">
+                            <div className="min-w-0">
+                              <p className="break-words font-black text-rose-950">
                                 {details.name}
                               </p>
 
@@ -516,7 +516,7 @@ export default function MealPlanPage() {
 
                             <button
                               onClick={() => deleteMealItem(item.id)}
-                              className="flex h-9 w-9 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
+                              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
                             >
                               <Trash2 size={16} />
                             </button>
@@ -603,7 +603,7 @@ export default function MealPlanPage() {
         {!hasHousehold ? (
           <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
             <p className="text-lg font-black text-pink-500">
-              No household yet â™ˇ
+              No household yet ♡
             </p>
             <p className="mt-2 font-semibold text-rose-500">
               Join or create a household first to plan meals together.

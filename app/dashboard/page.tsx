@@ -638,7 +638,7 @@ export default function DashboardPage() {
                 </p>
             </section>
 
-            <section className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <div className="rounded-[2rem] bg-orange-50 p-5 shadow-sm sm:p-6">
                     <Utensils className="text-orange-400" />
                     <p className="mt-3 text-sm font-black uppercase text-orange-400">
@@ -695,11 +695,11 @@ export default function DashboardPage() {
             </section>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
-                <h2 className="text-3xl font-black text-pink-500">Daily goals ♡</h2>
+                <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">Daily goals ♡</h2>
 
                 <div className="mt-5 space-y-5">
                     <div>
-                        <div className="flex justify-between text-sm font-black text-rose-700">
+                        <div className="flex flex-wrap justify-between gap-2 text-sm font-black text-rose-700">
                             <span>Calories</span>
                             <span>
                                 {hasFitnessProfile
@@ -725,7 +725,7 @@ export default function DashboardPage() {
                     </div>
 
                     <div>
-                        <div className="flex justify-between text-sm font-black text-rose-700">
+                        <div className="flex flex-wrap justify-between gap-2 text-sm font-black text-rose-700">
                             <span>Protein</span>
                             <span>
                                 {hasFitnessProfile
@@ -776,7 +776,7 @@ export default function DashboardPage() {
 
             <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
-                    <h2 className="text-3xl font-black text-pink-500">
+                    <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
                         Today&apos;s meal plan ♡
                     </h2>
 
@@ -789,7 +789,7 @@ export default function DashboardPage() {
                             todayMeals.map((meal) => (
                                 <div key={meal.id} className="rounded-2xl bg-pink-50 p-4">
                                     <div className="flex justify-between gap-4">
-                                        <div>
+                                        <div className="min-w-0">
                                             <p className="text-lg font-black text-rose-950">
                                                 {meal.name}
                                             </p>
@@ -798,7 +798,7 @@ export default function DashboardPage() {
                                             </p>
                                         </div>
 
-                                        <p className="font-black text-pink-500">
+                                        <p className="shrink-0 font-black text-pink-500">
                                             {meal.cost.toFixed(2)} €
                                         </p>
                                     </div>
@@ -821,7 +821,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
-                    <h2 className="text-3xl font-black text-pink-500">
+                    <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
                         Shopping preview ♡
                     </h2>
 
@@ -834,9 +834,9 @@ export default function DashboardPage() {
                             shoppingItems.slice(0, 6).map((item) => (
                                 <div key={item.id} className="rounded-2xl bg-rose-50 p-4">
                                     <div className="flex justify-between gap-3">
-                                        <p className="font-black text-rose-950">{item.name}</p>
+                                        <p className="min-w-0 break-words font-black text-rose-950">{item.name}</p>
                                         {item.quantity && (
-                                            <p className="text-xl font-bold text-rose-700">
+                                            <p className="shrink-0 text-xl font-bold text-rose-700">
                                                 {item.quantity}
                                             </p>
                                         )}
