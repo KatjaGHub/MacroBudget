@@ -39,6 +39,20 @@ export const viewport: Viewport = {
   themeColor: "#ec4899",
 };
 
+const themeScript = `
+(() => {
+  try {
+    const theme = localStorage.getItem("macrobudget-theme") || "system";
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (theme === "dark" || (theme === "system" && prefersDark)) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  } catch {}
+})();
+`;
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -47,11 +61,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-pink-50 pb-24 text-rose-950 md:pb-0">
-        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4ef,transparent_35%),radial-gradient(circle_at_top_right,#f3e8ff,transparent_30%),linear-gradient(#fff7fb,#fff)]">
-          <nav className="sticky top-0 z-50 border-b border-pink-100 bg-white/70 backdrop-blur-md">
+      <body className="min-h-full bg-pink-50 pb-24 text-rose-950 md:pb-0 dark:bg-[#120912] dark:text-pink-50">
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4ef,transparent_35%),radial-gradient(circle_at_top_right,#f3e8ff,transparent_30%),linear-gradient(#fff7fb,#fff)] dark:bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.14),transparent_30%),linear-gradient(#160b14,#120912)]">
+          <nav className="sticky top-0 z-50 border-b border-pink-100 bg-white/70 backdrop-blur-md dark:border-pink-900/60 dark:bg-[#21131d]/80">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 p-4">
               <Link
                 href="/dashboard"

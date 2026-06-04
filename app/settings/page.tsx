@@ -30,8 +30,36 @@ const years = Array.from({ length: 100 }, (_, index) =>
     String(new Date().getFullYear() - index)
 );
 
+type ThemeMode = "system" | "light" | "dark";
+
+const themeOptions: { value: ThemeMode; label: string; description: string }[] = [
+    {
+        value: "system",
+        label: "System",
+        description: "Follow this device",
+    },
+    {
+        value: "light",
+        label: "Light",
+        description: "Keep the bright look",
+    },
+    {
+        value: "dark",
+        label: "Dark",
+        description: "Use darker cards",
+    },
+];
+
+function applyTheme(theme: ThemeMode) {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const shouldUseDark = theme === "dark" || (theme === "system" && prefersDark);
+
+    document.documentElement.classList.toggle("dark", shouldUseDark);
+}
+
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
+    const [theme, setTheme] = useState<ThemeMode>("system");
     const [fullName, setFullName] = useState("");
     const [heightCm, setHeightCm] = useState("");
     const [sex, setSex] = useState("");
@@ -46,6 +74,37 @@ export default function SettingsPage() {
     const [proteinTargetMode, setProteinTargetMode] = useState<"auto" | "manual">("auto");
     const [goalWeight, setGoalWeight] = useState("");
     const [goalStartWeight, setGoalStartWeight] = useState("");
+
+    useEffect(() => {
+        const savedTheme = localStorage.getItem("macrobudget-theme") as ThemeMode | null;
+        const initialTheme =
+            savedTheme === "light" || savedTheme === "dark" || savedTheme === "system"
+                ? savedTheme
+                : "system";
+
+        const timeoutId = window.setTimeout(() => {
+            setTheme(initialTheme);
+            applyTheme(initialTheme);
+        }, 0);
+
+        const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+        const syncSystemTheme = () => {
+            const currentTheme =
+                (localStorage.getItem("macrobudget-theme") as ThemeMode | null) ??
+                "system";
+
+            if (currentTheme === "system") {
+                applyTheme("system");
+            }
+        };
+
+        mediaQuery.addEventListener("change", syncSystemTheme);
+
+        return () => {
+            window.clearTimeout(timeoutId);
+            mediaQuery.removeEventListener("change", syncSystemTheme);
+        };
+    }, []);
 
     useEffect(() => {
         const fetchProfile = async () => {
@@ -162,6 +221,12 @@ export default function SettingsPage() {
         alert("Profile saved ?");
     };
 
+    const saveTheme = (nextTheme: ThemeMode) => {
+        setTheme(nextTheme);
+        localStorage.setItem("macrobudget-theme", nextTheme);
+        applyTheme(nextTheme);
+    };
+
     return (
         <main className="mx-auto max-w-3xl px-4 py-4 sm:p-6">
             {loading ? (
@@ -192,6 +257,33 @@ export default function SettingsPage() {
                 <p className="mt-3 text-rose-700">
                     Manage your account and shared household.
                 </p>
+            </section>
+
+            <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
+                <p className="text-2xl font-black text-pink-500">Theme ♡</p>
+
+                <p className="mt-1 text-sm font-semibold text-rose-500">
+                    Choose how MacroBudget looks on this device.
+                </p>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                    {themeOptions.map((option) => (
+                        <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => saveTheme(option.value)}
+                            className={`rounded-2xl border px-5 py-4 text-left transition ${theme === option.value
+                                ? "border-pink-400 bg-pink-500 text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)]"
+                                : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
+                                }`}
+                        >
+                            <p className="font-black">{option.label}</p>
+                            <p className="mt-1 text-sm font-semibold opacity-80">
+                                {option.description}
+                            </p>
+                        </button>
+                    ))}
+                </div>
             </section>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
