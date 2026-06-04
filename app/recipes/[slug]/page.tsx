@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 type Ingredient = {
@@ -35,6 +36,7 @@ type RecipeDetailsPageProps = {
 };
 
 export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
+    const { t } = useLanguage();
     const [recipe, setRecipe] = useState<Recipe | null>(null);
     const [recipeId, setRecipeId] = useState<string>("");
 
@@ -90,7 +92,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
     if (!recipe) {
         return (
             <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
-                <p className="text-pink-500 font-black">Loading recipe ♡</p>
+                <p className="text-pink-500 font-black">{t.recipeDetails.loading}</p>
             </main>
         );
     }
@@ -124,7 +126,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
                 className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-pink-500 shadow-sm transition hover:bg-pink-50"
             >
                 <ArrowLeft size={16} />
-                Back to recipes
+                {t.common.backToRecipes}
             </Link>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
@@ -132,14 +134,14 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
                     {recipe.name} ♡
                 </h1>
 
-                <p className="mt-3 text-rose-700">{recipe.servings} servings</p>
+                <p className="mt-3 text-rose-700">{recipe.servings} {t.common.servings}</p>
             </section>
 
             <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
                 <div className="space-y-6">
                     <section className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                         <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-                            Ingredients
+                            {t.common.ingredients}
                         </h2>
 
                         <div className="mt-5 space-y-3">
@@ -186,7 +188,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
 
                     <section className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                         <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-                            Instructions
+                            {t.common.instructions}
                         </h2>
 
                         {recipe.instructions ? (
@@ -195,7 +197,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
                             </p>
                         ) : (
                             <p className="mt-5 rounded-2xl bg-rose-50/70 p-4 font-semibold text-rose-400">
-                                No instructions added yet.
+                                {t.recipeDetails.noInstructions}
                             </p>
                         )}
                     </section>
@@ -203,13 +205,13 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
 
                 <aside className="h-fit rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-6">
                     <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                        recipe summary
+                        {t.recipeDetails.summary}
                     </p>
 
                     <div className="mt-6 space-y-3">
                         <div className="rounded-2xl bg-orange-50 p-4">
                             <p className="text-xs font-bold uppercase text-orange-400">
-                                Calories / serving
+                                {t.recipeDetails.caloriesServing}
                             </p>
 
                             <p className="mt-1 text-2xl font-black text-rose-950">
@@ -219,7 +221,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
 
                         <div className="rounded-2xl bg-purple-50 p-4">
                             <p className="text-xs font-bold uppercase text-purple-400">
-                                Protein / serving
+                                {t.recipeDetails.proteinServing}
                             </p>
 
                             <p className="mt-1 text-2xl font-black text-rose-950">
@@ -229,7 +231,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
 
                         <div className="rounded-2xl bg-pink-50 p-4">
                             <p className="text-xs font-bold uppercase text-pink-400">
-                                Cost / serving
+                                {t.recipeDetails.costServing}
                             </p>
 
                             <p className="mt-1 text-2xl font-black text-rose-950">
@@ -239,12 +241,12 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
 
                         <div className="rounded-2xl border border-pink-100 bg-rose-50/60 p-4">
                             <p className="text-xs font-bold uppercase text-pink-400">
-                                Total recipe
+                                {t.recipeDetails.totalRecipe}
                             </p>
 
                             <p className="mt-1 text-sm font-bold text-rose-700">
                                 {Math.round(totals.calories)} kcal ·{" "}
-                                {totals.protein.toFixed(1)} g protein ·{" "}
+                                {totals.protein.toFixed(1)} g {t.common.protein} ·{" "}
                                 {totals.cost.toFixed(2)} €
                             </p>
                         </div>

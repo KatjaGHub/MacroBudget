@@ -3,19 +3,20 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
-const ingredientTypes = [
-  { emoji: "🍗", label: "Protein" },
-  { emoji: "🥬", label: "Produce" },
-  { emoji: "🥛", label: "Dairy" },
-  { emoji: "🛒", label: "Store bought" },
-];
-
 export default function CreateIngredientPage() {
+  const { t } = useLanguage();
   const [name, setName] = useState("");
   const [emoji, setEmoji] = useState("🍗");
+  const ingredientTypes = [
+    { emoji: "🍗", label: t.createIngredient.proteinType },
+    { emoji: "🥬", label: t.createIngredient.produceType },
+    { emoji: "🥛", label: t.createIngredient.dairyType },
+    { emoji: "🛒", label: t.createIngredient.storeBoughtType },
+  ];
 
   const [unit, setUnit] = useState<"g" | "pcs">("g");
   const [calories, setCalories] = useState("");
@@ -45,20 +46,20 @@ export default function CreateIngredientPage() {
         className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-pink-500 shadow-sm transition hover:bg-pink-50"
       >
         <ArrowLeft size={16} />
-        Back to ingredients
+        {t.common.backToIngredients}
       </Link>
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-          ingredient builder
+          {t.createIngredient.builder}
         </p>
 
         <h1 className="mt-2 text-5xl font-black text-pink-500">
-          Create Ingredient ♡
+          {t.createIngredient.title}
         </h1>
 
         <p className="mt-3 text-rose-700">
-          Add nutrition values and calculate price from package size.
+          {t.createIngredient.intro}
         </p>
       </section>
 
@@ -66,7 +67,7 @@ export default function CreateIngredientPage() {
         <div className="rounded-[2rem] border border-pink-100 bg-white/85 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
           <div>
             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              Ingredient name
+              {t.createIngredient.ingredientName}
             </label>
 
             <input
@@ -79,7 +80,7 @@ export default function CreateIngredientPage() {
 
           <div className="mt-6">
             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              Ingredient type
+              {t.createIngredient.ingredientType}
             </label>
 
             <div className="mt-3 grid grid-cols-2 gap-3 xl:grid-cols-4">
@@ -102,7 +103,7 @@ export default function CreateIngredientPage() {
 
           <div className="mt-6">
             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              Measurement unit
+              {t.createIngredient.measurementUnit}
             </label>
 
             <div className="mt-3 grid grid-cols-2 gap-3">
@@ -120,7 +121,7 @@ export default function CreateIngredientPage() {
                     : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                     }`}
                 >
-                  {option === "g" ? "Grams" : "Pieces"}
+                  {option === "g" ? t.common.grams : t.common.pieces}
                 </button>
               ))}
             </div>
@@ -129,7 +130,7 @@ export default function CreateIngredientPage() {
           <div className="mt-8 grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-sm font-bold uppercase text-orange-400">
-                Calories / {unit === "g" ? "100g" : "piece"}
+                {t.common.calories} / {unit === "g" ? "100g" : t.common.piece}
               </label>
 
               <input
@@ -143,7 +144,7 @@ export default function CreateIngredientPage() {
 
             <div>
               <label className="text-sm font-bold uppercase text-purple-400">
-                Protein / {unit === "g" ? "100g" : "piece"}
+                {t.common.protein} / {unit === "g" ? "100g" : t.common.piece}
               </label>
 
               <input
@@ -158,14 +159,14 @@ export default function CreateIngredientPage() {
 
           <div className="mt-8 rounded-[2rem] border border-pink-100 bg-pink-50/60 p-5">
             <h2 className="text-xl font-black text-pink-500">
-              Package price ♡
+              {t.createIngredient.packagePrice} ♡
             </h2>
 
 
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  Package amount ({unit === "g" ? "g" : "pieces"})
+                  {t.createIngredient.packageAmount} ({unit === "g" ? "g" : t.common.pieces})
                 </label>
 
                 <input
@@ -179,7 +180,7 @@ export default function CreateIngredientPage() {
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  Package price (€)
+                  {t.createIngredient.packagePriceEuro}
                 </label>
 
                 <input
@@ -195,12 +196,12 @@ export default function CreateIngredientPage() {
 
             <div className="mt-5 rounded-2xl bg-white p-4">
               <p className="text-xs font-bold uppercase text-pink-400">
-                Calculated cost
+                {t.createIngredient.calculatedCost}
               </p>
 
               <p className="mt-1 text-2xl font-black text-rose-950">
                 {calculatedCost.toFixed(2)} € /{" "}
-                {unit === "g" ? "100g" : "piece"}
+                {unit === "g" ? "100g" : t.common.piece}
               </p>
             </div>
           </div>
@@ -210,7 +211,7 @@ export default function CreateIngredientPage() {
               const householdId = await getHouseholdId();
 
               if (!householdId) {
-                alert("No household found.");
+                alert(t.common.noHouseholdFound);
                 return;
               }
 
@@ -235,13 +236,13 @@ export default function CreateIngredientPage() {
             }}
             className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
           >
-            Save Ingredient ♡
+            {t.createIngredient.save}
           </button>
         </div>
 
         <aside className="h-fit rounded-[2rem] border border-pink-100 bg-white p-6 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-            ingredient preview
+            {t.createIngredient.preview}
           </p>
 
           <div className="mt-5 flex items-center gap-4">
@@ -251,7 +252,7 @@ export default function CreateIngredientPage() {
 
             <div>
               <h2 className="text-3xl font-black text-pink-500">
-                {name || "New ingredient"} ♡
+                {name || t.createIngredient.newIngredient} ♡
               </h2>
             </div>
           </div>
@@ -259,42 +260,42 @@ export default function CreateIngredientPage() {
           <div className="mt-6 space-y-3">
             <div className="rounded-2xl bg-orange-50 p-4">
               <p className="text-xs font-bold uppercase text-orange-400">
-                Calories
+                {t.common.calories}
               </p>
 
               <p className="mt-1 text-2xl font-black text-rose-950">
-                {calories || 0} kcal / {unit === "g" ? "100g" : "piece"}
+                {calories || 0} kcal / {unit === "g" ? "100g" : t.common.piece}
               </p>
             </div>
 
             <div className="rounded-2xl bg-purple-50 p-4">
               <p className="text-xs font-bold uppercase text-purple-400">
-                Protein
+                {t.common.protein}
               </p>
 
               <p className="mt-1 text-2xl font-black text-rose-950">
-                {protein || 0} g / {unit === "g" ? "100g" : "piece"}
+                {protein || 0} g / {unit === "g" ? "100g" : t.common.piece}
               </p>
             </div>
 
             <div className="rounded-2xl bg-pink-50 p-4">
               <p className="text-xs font-bold uppercase text-pink-400">
-                Cost
+                {t.common.cost}
               </p>
 
               <p className="mt-1 text-2xl font-black text-rose-950">
                 {calculatedCost.toFixed(2)} € /{" "}
-                {unit === "g" ? "100g" : "piece"}
+                {unit === "g" ? "100g" : t.common.piece}
               </p>
             </div>
 
             <div className="rounded-2xl border border-pink-100 bg-rose-50/60 p-4">
               <p className="text-xs font-bold uppercase text-pink-400">
-                Package
+                {t.createIngredient.package}
               </p>
 
               <p className="mt-1 text-sm font-bold text-rose-700">
-                {packageAmount || 0} {unit === "g" ? "g" : "pcs"} for{" "}
+                {packageAmount || 0} {unit === "g" ? "g" : "pcs"} /{" "}
                 {packagePrice || 0} €
               </p>
             </div>

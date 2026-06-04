@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { LineChart, Scale, Sparkles, Utensils } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -106,6 +107,8 @@ function createChannelSuffix() {
 }
 
 export default function DashboardPage() {
+    const { language, t } = useLanguage();
+    const dateLocale = language === "sl" ? "sl-SI" : language === "de" ? "de-DE" : "en-US";
     const [name, setName] = useState("");
     const [householdId, setHouseholdId] = useState<number | null>(null);
     const [userId, setUserId] = useState("");
@@ -144,7 +147,7 @@ export default function DashboardPage() {
             .eq("id", currentUserId)
             .maybeSingle();
 
-        setName(profileData?.full_name ?? "there");
+        setName(profileData?.full_name ?? "");
         setHeightCm(profileData?.height_cm ? String(profileData.height_cm) : "");
         setBirthDate(profileData?.birth_date ?? "");
         setSex(profileData?.sex ?? "");
@@ -481,15 +484,6 @@ export default function DashboardPage() {
     const goalProgressPercent = goalTotalDistance
         ? Math.min((goalProgressKg / goalTotalDistance) * 100, 100)
         : 0;
-    const goalAchievementMessage =
-        goalMilestoneKg >= goalTotalDistance
-            ? "Goal reached. That is a huge moment."
-            : goalMilestoneKg >= 10
-                ? "You are building real momentum."
-                : goalMilestoneKg >= 5
-                    ? "That progress is starting to stack up."
-                    : "Small steps count. This one counts too.";
-
     useEffect(() => {
         const timeoutId = window.setTimeout(() => {
             if (!userId || !goalStartWeight || !goalWeight || goalMilestoneKg <= 0) {
@@ -520,14 +514,14 @@ export default function DashboardPage() {
     }, [goalMilestoneKg, goalStartWeight, goalWeight, userId]);
 
     const bmiLabel = !bmi
-        ? "Add height in settings"
+        ? t.dashboard.addHeight
         : bmi < 18.5
-            ? "Underweight"
+            ? t.dashboard.underweight
             : bmi < 25
-                ? "Normal range"
+                ? t.dashboard.normalRange
                 : bmi < 30
-                    ? "Overweight"
-                    : "Obese";
+                    ? t.dashboard.overweight
+                    : t.dashboard.obese;
 
     const weightChange =
         myWeightLogs.length >= 2 ? latestWeight - myWeightLogs[0].weight : 0;
@@ -553,7 +547,7 @@ export default function DashboardPage() {
 
     const deleteWeightLog = async (log: WeightLog) => {
         const shouldDelete = window.confirm(
-            `Remove the ${log.weight} kg entry from ${log.date}?`
+            `${t.dashboard.removeWeightConfirmStart} ${log.weight} ${t.dashboard.removeWeightConfirmEnd} ${log.date}?`
         );
 
         if (!shouldDelete) return;
@@ -589,8 +583,8 @@ export default function DashboardPage() {
                     id: log.user_id,
                     name:
                         log.user_id === userId
-                            ? name || "You"
-                            : log.profiles?.full_name ?? "User",
+                            ? name || t.common.you
+                            : log.profiles?.full_name ?? t.common.someone,
                 },
             ])
         ).values()
@@ -628,15 +622,15 @@ export default function DashboardPage() {
         <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
             <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    dashboard
+                    {t.dashboard.eyebrow}
                 </p>
 
                 <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
-                    Welcome, {name} ♡
+                    {t.dashboard.welcome}, {name} ♡
                 </h1>
 
                 <p className="mt-3 text-base font-semibold text-rose-600 sm:text-lg">
-                    Today&apos;s plan, costs, shopping and progress.
+                    {t.dashboard.intro}
                 </p>
             </section>
 
@@ -644,7 +638,7 @@ export default function DashboardPage() {
                 <div className="rounded-[2rem] bg-orange-50 p-4 shadow-sm sm:p-6">
                     <Utensils className="text-orange-400" />
                     <p className="mt-3 text-xs font-black uppercase text-orange-400 sm:text-sm">
-                        Calories
+                        {t.common.calories}
                     </p>
                     <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {Math.round(todayCalories)}
@@ -652,61 +646,61 @@ export default function DashboardPage() {
                     <p className="text-xs font-semibold text-rose-500 sm:text-sm">
                         {hasFitnessProfile
                             ? `of ${activeCalorieTarget || "—"} kcal`
-                            : "tracked today"}
+                            : t.dashboard.trackedToday}
                     </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-purple-50 p-4 shadow-sm sm:p-6">
                     <Sparkles className="text-purple-400" />
                     <p className="mt-3 text-xs font-black uppercase text-purple-400 sm:text-sm">
-                        Protein
+                        {t.common.protein}
                     </p>
                     <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {todayProtein.toFixed(1)}g
                     </p>
                     <p className="text-xs font-semibold text-rose-500 sm:text-sm">
                         {hasFitnessProfile
-                            ? `of ${activeProteinTarget || "—"}g`
-                            : "tracked today"}
+                            ? `${t.dashboard.of} ${activeProteinTarget || "—"}g`
+                            : t.dashboard.trackedToday}
                     </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-pink-50 p-4 shadow-sm sm:p-6">
                     <LineChart className="text-pink-400" />
                     <p className="mt-3 text-xs font-black uppercase text-pink-400 sm:text-sm">
-                        Daily cost
+                        {t.dashboard.dailyCost}
                     </p>
                     <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {todayCost.toFixed(2)}€
                     </p>
                     <p className="text-xs font-semibold text-rose-500 sm:text-sm">
-                        estimated today
+                        {t.dashboard.estimatedToday}
                     </p>
                 </div>
 
                 <div className="rounded-[2rem] bg-rose-50 p-4 shadow-sm sm:p-6">
                     <LineChart className="text-rose-400" />
                     <p className="mt-3 text-xs font-black uppercase text-rose-400 sm:text-sm">
-                        Weekly cost
+                        {t.dashboard.weeklyCost}
                     </p>
                     <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {weeklyCost.toFixed(2)}€
                     </p>
-                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">next 7 days</p>
+                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">{t.dashboard.next7Days}</p>
                 </div>
             </section>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
-                <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">Daily goals ♡</h2>
+                <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">{t.dashboard.dailyGoals}</h2>
 
                 <div className="mt-5 space-y-5">
                     <div>
                         <div className="flex flex-wrap justify-between gap-2 text-sm font-black text-rose-700">
-                            <span>Calories</span>
+                            <span>{t.common.calories}</span>
                             <span>
                                 {hasFitnessProfile
                                     ? `${Math.round(todayCalories)} / ${activeCalorieTarget || "—"} kcal`
-                                    : `${Math.round(todayCalories)} kcal tracked`}
+                                    : `${Math.round(todayCalories)} kcal ${t.dashboard.tracked}`}
                             </span>
                         </div>
 
@@ -720,19 +714,19 @@ export default function DashboardPage() {
                         <p className="mt-2 text-sm font-semibold text-rose-500">
                             {hasFitnessProfile
                                 ? calorieTargetMode === "auto"
-                                    ? "Auto target updates with your latest weight."
-                                    : "Manual target is fixed from settings."
-                                : "Add your fitness details in settings to unlock a calorie target."}
+                                    ? t.dashboard.autoTargetWeight
+                                    : t.dashboard.manualTarget
+                                : t.dashboard.addFitnessCalories}
                         </p>
                     </div>
 
                     <div>
                         <div className="flex flex-wrap justify-between gap-2 text-sm font-black text-rose-700">
-                            <span>Protein</span>
+                            <span>{t.common.protein}</span>
                             <span>
                                 {hasFitnessProfile
                                     ? `${todayProtein.toFixed(1)} / ${activeProteinTarget || "—"}g`
-                                    : `${todayProtein.toFixed(1)}g tracked`}
+                                    : `${todayProtein.toFixed(1)}g ${t.dashboard.tracked}`}
                             </span>
                         </div>
 
@@ -746,31 +740,31 @@ export default function DashboardPage() {
                         <p className="mt-2 text-sm font-semibold text-rose-500">
                             {hasFitnessProfile
                                 ? proteinTargetMode === "auto"
-                                    ? "Auto target uses latest weight × 1.6g."
-                                    : "Manual protein target is fixed from settings."
-                                : "Add your fitness details in settings to unlock a protein target."}
+                                    ? t.dashboard.autoProteinWeight
+                                    : t.dashboard.manualProtein
+                                : t.dashboard.addFitnessProtein}
                         </p>
                     </div>
 
                     <div className="rounded-2xl bg-pink-50 p-4">
                         <p className="text-xs font-bold uppercase text-pink-400">
-                            Estimated weekly change
+                            {t.dashboard.estimatedWeeklyChange}
                         </p>
 
                         <p className="mt-1 text-2xl font-black text-rose-950">
                             {!hasFitnessProfile || !recommendedCalories || !activeCalorieTarget
-                                ? "Add settings info ✨"
+                                ? `${t.dashboard.addSettingsInfo} ✨`
                                 : weeklyWeightChangeKg > 0
                                     ? `-${weeklyWeightChangeKg.toFixed(2)} kg/week`
                                     : weeklyWeightChangeKg < 0
                                         ? `+${Math.abs(weeklyWeightChangeKg).toFixed(2)} kg/week`
-                                        : "Maintain"}
+                                        : t.dashboard.maintain}
                         </p>
 
                         <p className="mt-1 text-sm font-bold text-rose-500">
                             {hasFitnessProfile
-                                ? "based on calorie target vs estimated maintenance"
-                                : "We will estimate this after you add your fitness details in settings."}
+                                ? t.dashboard.basedOnTarget
+                                : t.dashboard.estimateAfterSettings}
                         </p>
                     </div>
                 </div>
@@ -779,13 +773,13 @@ export default function DashboardPage() {
             <section className="mt-8 grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
                 <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-                        Today&apos;s meal plan ♡
+                        {t.dashboard.todayMealPlan}
                     </h2>
 
                     <div className="mt-5 space-y-3">
                         {todayMeals.length === 0 ? (
                             <p className="rounded-2xl bg-pink-50 p-4 font-semibold text-rose-400">
-                                No meals planned for today.
+                                {t.dashboard.noMealsToday}
                             </p>
                         ) : (
                             todayMeals.map((meal) => (
@@ -807,7 +801,7 @@ export default function DashboardPage() {
 
                                     <p className="mt-2 text-xs font-bold text-rose-500">
                                         {Math.round(meal.calories)} kcal ·{" "}
-                                        {meal.protein.toFixed(1)}g protein
+                                        {meal.protein.toFixed(1)}g {t.common.protein}
                                     </p>
                                 </div>
                             ))
@@ -818,19 +812,19 @@ export default function DashboardPage() {
                         href="/meal-plan"
                         className="mt-5 block rounded-full bg-pink-500 px-5 py-3 text-center font-black text-white transition hover:bg-pink-600"
                     >
-                        View full meal plan
+                        {t.dashboard.viewFullMealPlan}
                     </a>
                 </div>
 
                 <div className="rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-                        Shopping preview ♡
+                        {t.dashboard.shoppingPreview}
                     </h2>
 
                     <div className="mt-5 space-y-3">
                         {shoppingItems.length === 0 ? (
                             <p className="rounded-2xl bg-rose-50 p-4 font-semibold text-rose-400">
-                                Shopping list is clear.
+                                {t.dashboard.shoppingClear}
                             </p>
                         ) : (
                             shoppingItems.slice(0, 6).map((item) => (
@@ -845,10 +839,10 @@ export default function DashboardPage() {
                                     </div>
 
                                     <p className="mt-1 text-xs font-bold text-rose-400">
-                                        added by{" "}
+                                        {t.dashboard.addedBy}{" "}
                                         {item.added_by === userId
-                                            ? "you"
-                                            : item.profiles?.full_name ?? "Someone"}
+                                            ? t.common.you
+                                            : item.profiles?.full_name ?? t.common.someone}
                                     </p>
                                 </div>
                             ))
@@ -859,7 +853,7 @@ export default function DashboardPage() {
                         href="/shopping-list"
                         className="mt-5 block rounded-full bg-rose-400 px-5 py-3 text-center font-black text-white transition hover:bg-rose-500"
                     >
-                        Open shopping list
+                        {t.dashboard.openShoppingList}
                     </a>
                 </div>
             </section>
@@ -871,7 +865,7 @@ export default function DashboardPage() {
                     <Scale className="text-pink-400" />
 
                     <h2 className="mt-3 text-2xl font-black text-pink-500 sm:text-3xl">
-                        Daily weight ♡
+                        {t.dashboard.dailyWeight}
                     </h2>
 
                     <div className="mt-5 grid gap-3">
@@ -879,7 +873,7 @@ export default function DashboardPage() {
                             type="number"
                             value={newWeight}
                             onChange={(event) => setNewWeight(event.target.value)}
-                            placeholder="Weight kg"
+                            placeholder={t.dashboard.weightKg}
                             className="rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                         />
 
@@ -887,32 +881,32 @@ export default function DashboardPage() {
                             onClick={saveWeight}
                             className="rounded-full bg-pink-500 px-5 py-3 font-black text-white transition hover:bg-pink-600"
                         >
-                            Log weight
+                            {t.dashboard.logWeight}
                         </button>
                     </div>
 
                     <div className="mt-5 grid gap-3 sm:grid-cols-2">
                         <div className="rounded-2xl bg-orange-50 p-4">
                             <p className="text-xs font-bold uppercase text-orange-400">
-                                Recommended calories
+                                {t.dashboard.recommendedCalories}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {recommendedCalories ? `${recommendedCalories} kcal` : "—"}
                             </p>
                             <p className="mt-1 text-sm font-bold text-rose-500">
-                                estimated maintenance
+                                {t.dashboard.estimatedMaintenance}
                             </p>
                         </div>
 
                         <div className="rounded-2xl bg-purple-50 p-4">
                             <p className="text-xs font-bold uppercase text-purple-400">
-                                Recommended protein
+                                {t.dashboard.recommendedProtein}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {recommendedProtein ? `${recommendedProtein} g` : "—"}
                             </p>
                             <p className="mt-1 text-sm font-bold text-rose-500">
-                                based on latest weight × 1.6g
+                                {t.dashboard.basedOnLatestWeight}
                             </p>
                         </div>
 
@@ -920,7 +914,7 @@ export default function DashboardPage() {
                             <div className="flex flex-wrap items-start justify-between gap-3">
                                 <div>
                                     <p className="text-xs font-bold uppercase text-rose-400">
-                                        Goal weight
+                                        {t.dashboard.goalWeight}
                                     </p>
                                     <p className="mt-1 text-2xl font-black text-rose-950">
                                         {goalWeight ? `${goalWeight} kg` : "—"}
@@ -936,14 +930,14 @@ export default function DashboardPage() {
 
                             <p className="mt-2 text-sm font-bold text-rose-500">
                                 {!goalWeight
-                                    ? "Add a goal weight in settings."
+                                    ? t.dashboard.addGoalWeight
                                     : !latestWeight
-                                        ? "Log your current weight to estimate progress."
+                                        ? t.dashboard.logCurrentWeight
                                         : goalWeightDirection === "maintain"
-                                            ? "You are at your goal weight."
+                                            ? t.dashboard.atGoalWeight
                                             : goalWeightAligned
-                                                ? `${Math.abs(goalWeightDifference).toFixed(1)} kg to ${goalWeightDirection}; around ${Math.ceil(estimatedGoalWeeks)} weeks`
-                                                : "Adjust your calorie target to estimate this goal."}
+                                                ? `${Math.abs(goalWeightDifference).toFixed(1)} kg ${goalWeightDirection === "lose" ? t.dashboard.toLose : t.dashboard.toGain}; ${t.dashboard.aroundWeeks} ${Math.ceil(estimatedGoalWeeks)} ${t.dashboard.weeks}`
+                                                : t.dashboard.adjustCalorieTarget}
                             </p>
 
                             {goalStartWeight && goalWeight && latestWeight ? (
@@ -956,7 +950,7 @@ export default function DashboardPage() {
                                     </div>
 
                                     <p className="mt-2 text-xs font-bold text-rose-400">
-                                        Next achievement at {nextGoalMilestoneKg.toFixed(1)} kg progress.
+                                        {t.dashboard.nextAchievement} {nextGoalMilestoneKg.toFixed(1)} kg {t.dashboard.progress}
                                     </p>
                                 </div>
                             ) : null}
@@ -964,15 +958,21 @@ export default function DashboardPage() {
                             {showGoalAchievement && (
                                 <div className="rounded-2xl border border-pink-200 bg-pink-500 p-4 text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)]">
                                     <p className="text-xs font-black uppercase tracking-[0.2em] text-pink-100">
-                                        Achievement unlocked
+                                        {t.dashboard.achievementUnlocked}
                                     </p>
 
                                     <p className="mt-1 text-2xl font-black">
-                                        {goalMilestoneKg.toFixed(0)} kg closer ♡
+                                        {goalMilestoneKg.toFixed(0)} {t.dashboard.closer}
                                     </p>
 
                                     <p className="mt-1 text-sm font-bold text-pink-50">
-                                        {goalAchievementMessage}
+                                        {goalMilestoneKg >= goalTotalDistance
+                                            ? t.dashboard.goalReached
+                                            : goalMilestoneKg >= 10
+                                                ? t.dashboard.momentum
+                                                : goalMilestoneKg >= 5
+                                                    ? t.dashboard.progressStack
+                                                    : t.dashboard.smallSteps}
                                     </p>
                                 </div>
                             )}
@@ -981,7 +981,7 @@ export default function DashboardPage() {
                         <div className="rounded-2xl bg-pink-50 p-4 sm:col-span-2">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
-                                    <p className="text-xs font-bold uppercase text-pink-400">BMI</p>
+                                    <p className="text-xs font-bold uppercase text-pink-400">{t.dashboard.bmi}</p>
                                     <p className="mt-1 text-2xl font-black text-rose-950">
                                         {bmi ? bmi.toFixed(1) : "—"}
                                     </p>
@@ -990,7 +990,7 @@ export default function DashboardPage() {
 
                                 <div className="rounded-2xl bg-white/70 p-4">
                                     <p className="text-xs font-bold uppercase text-pink-400">
-                                        Healthy weight range
+                                        {t.dashboard.healthyWeightRange}
                                     </p>
                                     <p className="mt-1 text-2xl font-black text-rose-950">
                                         {healthyWeightRange
@@ -998,7 +998,7 @@ export default function DashboardPage() {
                                             : "—"}
                                     </p>
                                     <p className="mt-1 text-sm font-bold text-rose-500">
-                                        based on your height
+                                        {t.dashboard.basedOnHeight}
                                     </p>
                                 </div>
                             </div>
@@ -1010,20 +1010,20 @@ export default function DashboardPage() {
                             href="/settings"
                             className="mt-3 block rounded-2xl bg-purple-50 p-4 text-sm font-bold text-purple-500"
                         >
-                            For more fitness stats, update your information in settings ♡
+                            {t.dashboard.moreStats}
                         </a>
                     )}
                 </div>
 
                 <div className="flex h-full flex-col rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
                     <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-                        Household weight progress ♡
+                        {t.dashboard.householdWeightProgress}
                     </h2>
 
                     <div className="mt-5 flex min-h-[18rem] flex-1 flex-col rounded-2xl bg-pink-50 p-3 sm:min-h-[22rem] sm:p-4">
                         {weightLogs.length === 0 ? (
                             <p className="flex flex-1 items-center justify-center text-center font-semibold text-rose-400">
-                                Log your first weight to start the graph.
+                                {t.dashboard.logFirstWeight}
                             </p>
                         ) : (
                             <>
@@ -1109,7 +1109,7 @@ export default function DashboardPage() {
 
                                 {weightLogs.length === 1 ? (
                                     <p className="mt-4 text-center text-sm font-bold text-rose-400">
-                                        Your first weight entry is in. Log another one to draw the trend line ♡
+                                        {t.dashboard.firstWeightTrend}
                                     </p>
                                 ) : null}
                             </>
@@ -1119,7 +1119,7 @@ export default function DashboardPage() {
                     <div className="mt-5 grid gap-3 md:grid-cols-2">
                         <div className="rounded-2xl bg-pink-50 p-4">
                             <p className="text-xs font-bold uppercase text-pink-400">
-                                Latest weight
+                                {t.dashboard.latestWeight}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {latestWeight ? `${latestWeight} kg` : "—"}
@@ -1128,7 +1128,7 @@ export default function DashboardPage() {
 
                         <div className="rounded-2xl bg-purple-50 p-4">
                             <p className="text-xs font-bold uppercase text-purple-400">
-                                Change
+                                {t.dashboard.change}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {myWeightLogs.length >= 2
@@ -1139,7 +1139,7 @@ export default function DashboardPage() {
                     </div>
                     <div className="mt-4 rounded-2xl bg-pink-50 p-4">
                         <p className="text-xs font-bold uppercase text-pink-400">
-                            Weight lost this month
+                            {t.dashboard.weightLostThisMonth}
                         </p>
 
                         <p className="mt-1 text-2xl font-black text-rose-950">
@@ -1167,19 +1167,19 @@ export default function DashboardPage() {
                                 const difference = latestWeight - firstWeight;
 
                                 if (difference < 0) {
-                                    return `${Math.abs(difference).toFixed(1)} kg lost`;
+                                    return `${Math.abs(difference).toFixed(1)} ${t.dashboard.lost}`;
                                 }
 
                                 if (difference > 0) {
-                                    return `${difference.toFixed(1)} kg gained`;
+                                    return `${difference.toFixed(1)} ${t.dashboard.gained}`;
                                 }
 
-                                return "No change";
+                                return t.dashboard.noChange;
                             })()}
                         </p>
 
                         <p className="mt-1 text-sm font-bold text-rose-500">
-                            {new Date().toLocaleString("default", { month: "long" })} progress
+                            {new Date().toLocaleString(dateLocale, { month: "long" })} {t.dashboard.monthProgress}
                         </p>
                     </div>
                 </div>
@@ -1187,19 +1187,19 @@ export default function DashboardPage() {
                 ) : (
                     <div className="rounded-[2rem] border border-pink-100 bg-gradient-to-br from-white via-pink-50 to-rose-50 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)] lg:col-span-2 sm:p-8">
                         <p className="text-sm font-black uppercase tracking-[0.35em] text-pink-400">
-                            Fitness insights
+                            {t.dashboard.fitnessInsights}
                         </p>
                         <h2 className="mt-3 text-3xl font-black text-pink-500 sm:text-4xl">
-                            More fitness info is waiting ✨
+                            {t.dashboard.moreFitnessWaiting}
                         </h2>
                         <p className="mt-3 max-w-2xl text-base font-semibold text-rose-600 sm:text-lg">
-                            For more fitness information, go to settings and input some information ♡
+                            {t.dashboard.moreFitnessBody}
                         </p>
                         <a
                             href="/settings"
                             className="mt-6 inline-flex w-full items-center justify-center rounded-full bg-pink-500 px-6 py-3 text-base font-black text-white transition hover:bg-pink-600 sm:w-auto"
                         >
-                            Go to settings
+                            {t.dashboard.goToSettings}
                         </a>
                     </div>
                 )}

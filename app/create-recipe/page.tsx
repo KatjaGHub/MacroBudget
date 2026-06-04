@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -32,6 +33,8 @@ function createRecipeIngredient(id: number): RecipeIngredient {
 }
 
 export default function CreateRecipePage() {
+    const { t } = useLanguage();
+    const noHouseholdFound = t.common.noHouseholdFound;
     const [recipeName, setRecipeName] = useState("");
     const [servings, setServings] = useState(4);
     const [instructions, setInstructions] = useState("");
@@ -48,7 +51,7 @@ export default function CreateRecipePage() {
             const householdId = await getHouseholdId();
 
             if (!householdId) {
-                alert("No household found.");
+                alert(noHouseholdFound);
                 return;
             }
 
@@ -67,7 +70,7 @@ export default function CreateRecipePage() {
         };
 
         fetchIngredients();
-    }, []);
+    }, [noHouseholdFound]);
 
     const totals = useMemo(() => {
         return ingredients.reduce(
@@ -135,7 +138,7 @@ export default function CreateRecipePage() {
 
     const saveRecipe = async () => {
         if (!recipeName.trim()) {
-            alert("Please enter a recipe name.");
+            alert(t.createRecipe.enterName);
             return;
         }
 
@@ -144,14 +147,14 @@ export default function CreateRecipePage() {
         );
 
         if (validIngredients.length === 0) {
-            alert("Please add at least one ingredient.");
+            alert(t.createRecipe.addOneIngredient);
             return;
         }
 
         const householdId = await getHouseholdId();
 
         if (!householdId) {
-            alert("No household found.");
+            alert(t.common.noHouseholdFound);
             return;
         }
 
@@ -196,21 +199,20 @@ export default function CreateRecipePage() {
                 className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-bold text-pink-500 shadow-sm transition hover:bg-pink-50"
             >
                 <ArrowLeft size={16} />
-                Back to recipes
+                {t.common.backToRecipes}
             </Link>
 
             <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white/80 p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    recipe builder
+                    {t.createRecipe.builder}
                 </p>
 
                 <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
-                    Create Recipe ♡
+                    {t.createRecipe.title}
                 </h1>
 
                 <p className="mt-3 text-rose-700">
-                    Build recipes from ingredients and calculate calories, protein and
-                    cost per serving.
+                    {t.createRecipe.intro}
                 </p>
             </section>
 
@@ -219,7 +221,7 @@ export default function CreateRecipePage() {
                     <div className="grid gap-5 sm:grid-cols-[1fr_160px]">
                         <div>
                             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                                Recipe name
+                                {t.createRecipe.recipeName}
                             </label>
 
                             <input
@@ -231,7 +233,7 @@ export default function CreateRecipePage() {
 
                         <div>
                             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                                Servings
+                                {t.common.servings}
                             </label>
 
                             <input
@@ -249,7 +251,7 @@ export default function CreateRecipePage() {
                     <div className="mt-8">
                         <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <h2 className="text-2xl font-black text-pink-500">
-                                Ingredients
+                                {t.common.ingredients}
                             </h2>
 
                             <button
@@ -257,7 +259,7 @@ export default function CreateRecipePage() {
                                 className="inline-flex items-center gap-2 rounded-full bg-pink-500 px-4 py-2 text-sm font-bold text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
                             >
                                 <Plus size={16} />
-                                Add
+                                {t.createRecipe.add}
                             </button>
                         </div>
 
@@ -279,7 +281,7 @@ export default function CreateRecipePage() {
                                                     updateIngredient(ingredient.id, "search", event.target.value);
                                                     updateIngredient(ingredient.id, "ingredientId", "");
                                                 }}
-                                                placeholder="Search ingredient..."
+                                                placeholder={t.createRecipe.searchIngredient}
                                                 className="w-full rounded-xl bg-white px-4 py-3 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                                             />
 
@@ -301,7 +303,7 @@ export default function CreateRecipePage() {
                                                             >
                                                                 <span>{item.name}</span>
                                                                 <span className="text-xs text-rose-400">
-                                                                    {item.unit === "g" ? "per 100g" : "per piece"}
+                                                                    {item.unit === "g" ? t.createRecipe.per100g : t.createRecipe.perPiece}
                                                                 </span>
                                                             </button>
                                                         ))}
@@ -326,15 +328,15 @@ export default function CreateRecipePage() {
                                         <button
                                             onClick={() => deleteIngredient(ingredient.id)}
                                             className="flex items-center justify-center rounded-xl p-3 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500"
-                                            aria-label="Delete ingredient"
+                                            aria-label={`${t.ingredientsPage.deleteLabel} ${t.common.ingredient}`}
                                         >
                                             <Trash2 size={18} />
                                         </button>
 
                                         {selectedIngredient && (
                                             <p className="sm:col-span-3 text-sm font-semibold text-rose-500">
-                                                Amount in{" "}
-                                                {selectedIngredient.unit === "g" ? "grams" : "pieces"}
+                                                {t.createRecipe.amountIn}{" "}
+                                                {selectedIngredient.unit === "g" ? t.common.grams : t.common.pieces}
                                             </p>
                                         )}
                                     </div>
@@ -345,13 +347,13 @@ export default function CreateRecipePage() {
 
                     <div className="mt-8">
                         <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                            Instructions
+                            {t.common.instructions}
                         </label>
 
                         <textarea
                             value={instructions}
                             onChange={(event) => setInstructions(event.target.value)}
-                            placeholder="Write cooking steps here..."
+                            placeholder={t.createRecipe.writeSteps}
                             className="mt-2 min-h-40 w-full rounded-2xl bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                         />
                     </div>
@@ -360,27 +362,27 @@ export default function CreateRecipePage() {
                         onClick={saveRecipe}
                         className="mt-8 w-full rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
                     >
-                        Save Recipe ♡
+                        {t.createRecipe.save}
                     </button>
                 </div>
 
                 <aside className="h-fit rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-6">
                     <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                        recipe summary
+                        {t.createRecipe.summary}
                     </p>
 
                     <h2 className="mt-2 text-3xl font-black text-pink-500">
-                        {recipeName || "New recipe"} ♡
+                        {recipeName || t.createRecipe.newRecipe} ♡
                     </h2>
 
                     <p className="mt-1 text-sm font-semibold text-rose-500">
-                        {safeServings} servings
+                        {safeServings} {t.common.servings}
                     </p>
 
                     <div className="mt-6 space-y-3">
                         <div className="rounded-2xl bg-orange-50 p-4">
                             <p className="text-xs font-bold uppercase text-orange-400">
-                                Calories / serving
+                                {t.recipeDetails.caloriesServing}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {Math.round(perServing.calories)} kcal
@@ -389,7 +391,7 @@ export default function CreateRecipePage() {
 
                         <div className="rounded-2xl bg-purple-50 p-4">
                             <p className="text-xs font-bold uppercase text-purple-400">
-                                Protein / serving
+                                {t.recipeDetails.proteinServing}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {perServing.protein.toFixed(1)} g
@@ -398,7 +400,7 @@ export default function CreateRecipePage() {
 
                         <div className="rounded-2xl bg-pink-50 p-4">
                             <p className="text-xs font-bold uppercase text-pink-400">
-                                Cost / serving
+                                {t.recipeDetails.costServing}
                             </p>
                             <p className="mt-1 text-2xl font-black text-rose-950">
                                 {perServing.cost.toFixed(2)} €
@@ -407,12 +409,12 @@ export default function CreateRecipePage() {
                     </div>
 
                     <div className="mt-5 rounded-2xl border border-pink-100 bg-rose-50/60 p-4">
-                        <p className="text-sm font-black text-pink-500">Total recipe</p>
+                        <p className="text-sm font-black text-pink-500">{t.createRecipe.totalRecipe}</p>
 
                         <div className="mt-3 space-y-1 text-sm font-semibold text-rose-700">
-                            <p>{Math.round(totals.calories)} kcal total</p>
-                            <p>{totals.protein.toFixed(1)} g protein total</p>
-                            <p>{totals.cost.toFixed(2)} € total cost</p>
+                            <p>{Math.round(totals.calories)} kcal {t.common.total}</p>
+                            <p>{totals.protein.toFixed(1)} g {t.common.protein} {t.common.total}</p>
+                            <p>{totals.cost.toFixed(2)} € {t.common.cost} {t.common.total}</p>
                         </div>
                     </div>
                 </aside>

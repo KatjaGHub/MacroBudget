@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ScrollToTop from "@/components/ScrollToTop";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -18,6 +19,8 @@ type Ingredient = {
 };
 
 export default function IngredientsPage() {
+    const { t } = useLanguage();
+    const noHouseholdFound = t.common.noHouseholdFound;
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [ingredients, setIngredients] = useState<Ingredient[]>([]);
@@ -26,7 +29,7 @@ export default function IngredientsPage() {
         ingredientName: string
     ) => {
         const confirmed = window.confirm(
-            `Are you sure you want to delete "${ingredientName}"?`
+            `${t.ingredientsPage.deleteConfirm} "${ingredientName}"?`
         );
 
         if (!confirmed) return;
@@ -56,7 +59,7 @@ export default function IngredientsPage() {
 
             if (!householdId) {
                 setLoading(false);
-                alert("No household found.");
+                alert(noHouseholdFound);
                 return;
             }
 
@@ -77,7 +80,7 @@ export default function IngredientsPage() {
         };
 
         fetchIngredients();
-    }, []);
+    }, [noHouseholdFound]);
 
     const filteredIngredients = useMemo(() => {
         return ingredients
@@ -102,22 +105,22 @@ export default function IngredientsPage() {
         <main className="mx-auto max-w-6xl p-6">
             <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 shadow-[0_10px_30px_rgba(244,114,182,0.15)]">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    ingredient database
+                    {t.ingredientsPage.eyebrow}
                 </p>
 
                 <h1 className="mt-2 text-5xl font-black text-pink-500">
-                    Ingredients ♡
+                    {t.ingredientsPage.title}
                 </h1>
 
                 <p className="mt-3 text-rose-700">
-                    Track calories, macros and cost per ingredient.
+                    {t.ingredientsPage.intro}
                 </p>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-[1fr_260px]">
                     <input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search ingredients..."
+                        placeholder={t.ingredientsPage.search}
                         className="w-full rounded-full border border-pink-100 bg-white px-5 py-3 text-rose-900 shadow-sm outline-none placeholder:text-rose-300 focus:border-pink-300"
                     />
 
@@ -126,7 +129,7 @@ export default function IngredientsPage() {
                         className="flex h-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                     >
                         <Plus size={20} strokeWidth={3} />
-                        Add ingredient
+                        {t.ingredientsPage.add}
                     </Link>
                 </div>
 
@@ -147,44 +150,44 @@ export default function IngredientsPage() {
                 {loading ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            loading
+                            {t.common.loading}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Loading ingredients ♡
+                            {t.ingredientsPage.loadingTitle}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Pulling in your ingredient list.
+                            {t.ingredientsPage.loadingBody}
                         </p>
                     </div>
                 ) : ingredients.length === 0 ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            empty pantry
+                            {t.ingredientsPage.emptyEyebrow}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            No ingredients yet ♡
+                            {t.ingredientsPage.emptyTitle}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Start by adding your first ingredient to track nutrition and cost.
+                            {t.ingredientsPage.emptyBody}
                         </p>
                         <Link
                             href="/create-ingredient"
                             className="mt-6 inline-flex items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                         >
                             <Plus size={20} strokeWidth={3} />
-                            Add ingredient
+                            {t.ingredientsPage.add}
                         </Link>
                     </div>
                 ) : groupedIngredients.length === 0 ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            no matches
+                            {t.ingredientsPage.noMatches}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Nothing matches “{search}” ♡
+                            {t.ingredientsPage.nothingMatches} &quot;{search}&quot; ♡
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Try a different search or add a new ingredient.
+                            {t.ingredientsPage.tryDifferent}
                         </p>
                     </div>
                 ) : (
@@ -210,7 +213,7 @@ export default function IngredientsPage() {
                                                     handleDeleteIngredient(ingredient.id, ingredient.name)
                                                 }
                                                 className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
-                                                aria-label={`Delete ${ingredient.name}`}
+                                                aria-label={`${t.ingredientsPage.deleteLabel} ${ingredient.name}`}
                                             >
                                                 <Trash2 size={18} />
                                             </button>
@@ -221,13 +224,13 @@ export default function IngredientsPage() {
                                         </h3>
 
                                         <p className="mt-1 text-sm font-medium text-rose-500">
-                                            Nutrition per {ingredient.unit === "g" ? "100g" : "piece"}
+                                            {t.ingredientsPage.nutritionPer} {ingredient.unit === "g" ? "100g" : t.common.piece}
                                         </p>
 
                                         <div className="mt-6 grid grid-cols-2 gap-3">
                                             <div className="rounded-2xl bg-orange-50 p-4">
                                                 <p className="text-xs font-bold uppercase text-orange-400">
-                                                    Calories
+                                                    {t.common.calories}
                                                 </p>
 
                                                 <p className="mt-1 text-xl font-black text-rose-950">
@@ -237,7 +240,7 @@ export default function IngredientsPage() {
 
                                             <div className="rounded-2xl bg-purple-50 p-4">
                                                 <p className="text-xs font-bold uppercase text-purple-400">
-                                                    Protein
+                                                    {t.common.protein}
                                                 </p>
 
                                                 <p className="mt-1 text-xl font-black text-rose-950">
@@ -248,12 +251,12 @@ export default function IngredientsPage() {
 
                                         <div className="mt-4 rounded-2xl bg-pink-50 p-4">
                                             <p className="text-xs font-bold uppercase text-pink-400">
-                                                Cost
+                                                {t.common.cost}
                                             </p>
 
                                             <p className="mt-1 text-xl font-black text-rose-950">
                                                 {ingredient.cost.toFixed(2)} € /{" "}
-                                                {ingredient.unit === "g" ? "100g" : "piece"}
+                                                {ingredient.unit === "g" ? "100g" : t.common.piece}
                                             </p>
                                         </div>
                                     </article>

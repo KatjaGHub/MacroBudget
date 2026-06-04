@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner" | "Snack";
@@ -58,8 +59,8 @@ function formatDate(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function prettyDate(date: Date) {
-  return date.toLocaleDateString("en-US", {
+function prettyDate(date: Date, locale: string) {
+  return date.toLocaleDateString(locale, {
     weekday: "long",
     month: "short",
     day: "numeric",
@@ -67,6 +68,8 @@ function prettyDate(date: Date) {
 }
 
 export default function MealPlanPage() {
+  const { language, t } = useLanguage();
+  const dateLocale = language === "sl" ? "sl-SI" : language === "de" ? "de-DE" : "en-US";
   const [weekOffset, setWeekOffset] = useState(0);
 
   const weekDays = useMemo(() => {
@@ -76,14 +79,14 @@ export default function MealPlanPage() {
 
       return {
         date: formatDate(date),
-        label: prettyDate(date),
-        shortLabel: date.toLocaleDateString("en-US", {
+        label: prettyDate(date, dateLocale),
+        shortLabel: date.toLocaleDateString(dateLocale, {
           weekday: "short",
           day: "numeric",
         }),
       };
     });
-  }, [weekOffset]);
+  }, [dateLocale, weekOffset]);
 
   const today = formatDate(new Date());
   const weekLabel = `${weekDays[0].label} - ${weekDays[6].label}`;
@@ -287,7 +290,13 @@ export default function MealPlanPage() {
   );
 
   const selectedDayTotals = getTotals(selectedDayItems);
-  const selectedDayLabel = prettyDate(new Date(selectedDate));
+  const selectedDayLabel = prettyDate(new Date(selectedDate), dateLocale);
+  const mealTypeLabels: Record<MealType, string> = {
+    Breakfast: t.mealPlan.breakfast,
+    Lunch: t.mealPlan.lunch,
+    Dinner: t.mealPlan.dinner,
+    Snack: t.mealPlan.snack,
+  };
 
   const shiftSelectedDate = (days: number) => {
     const nextDate = new Date(`${selectedDate}T12:00:00`);
@@ -311,11 +320,11 @@ export default function MealPlanPage() {
     const userId = sessionData.session?.user.id;
 
     if (!userId) {
-      alert("You need to be logged in.");
+        alert(t.common.youNeedLogin);
       return;
     }
     if (!householdId) {
-      alert("No household found.");
+      alert(t.common.noHouseholdFound);
       return;
     }
 
@@ -395,15 +404,15 @@ export default function MealPlanPage() {
       {loading ? (
         <section className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-8">
           <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-            loading
+            {t.common.loading}
           </p>
 
           <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-4xl">
-            Loading meal plan ♡
+            {t.mealPlan.loadingTitle}
           </h1>
 
           <p className="mt-3 font-semibold text-rose-500">
-            Pulling in your meals, ingredients and recipes.
+            {t.mealPlan.loadingBody}
           </p>
         </section>
       ) : (
@@ -412,7 +421,7 @@ export default function MealPlanPage() {
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.15)] sm:p-6">
         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-          selected day
+          {t.mealPlan.selectedDay}
         </p>
 
         <h2 className="mt-2 text-2xl font-black text-pink-500 sm:text-4xl">
@@ -422,7 +431,7 @@ export default function MealPlanPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <div className="rounded-2xl bg-orange-50 p-4">
             <p className="text-xs font-bold uppercase text-orange-400">
-              Calories
+              {t.common.calories}
             </p>
             <p className="mt-1 text-2xl font-black text-rose-950">
               {Math.round(selectedDayTotals.calories)} kcal
@@ -431,7 +440,7 @@ export default function MealPlanPage() {
 
           <div className="rounded-2xl bg-purple-50 p-4">
             <p className="text-xs font-bold uppercase text-purple-400">
-              Protein
+              {t.common.protein}
             </p>
             <p className="mt-1 text-2xl font-black text-rose-950">
               {selectedDayTotals.protein.toFixed(1)} g
@@ -440,7 +449,7 @@ export default function MealPlanPage() {
 
           <div className="rounded-2xl bg-pink-50 p-4">
             <p className="text-xs font-bold uppercase text-pink-400">
-              Cost
+              {t.common.cost}
             </p>
             <p className="mt-1 text-2xl font-black text-rose-950">
               {selectedDayTotals.cost.toFixed(2)} €
@@ -466,10 +475,10 @@ export default function MealPlanPage() {
                   className="flex w-full items-center justify-between text-left"
                 >
                   <div className="min-w-0">
-                    <p className="text-lg font-black text-rose-950">{type}</p>
+                    <p className="text-lg font-black text-rose-950">{mealTypeLabels[type]}</p>
                     <p className="break-words text-sm font-semibold text-rose-500">
                       {items.length === 0
-                        ? "No items planned"
+                        ? t.mealPlan.noItemsPlanned
                         : items
                           .map((item) => getItemDetails(item)?.name)
                           .join(", ")}
@@ -485,7 +494,7 @@ export default function MealPlanPage() {
                   <div className="mt-4 space-y-3">
                     {items.length === 0 ? (
                       <p className="rounded-xl bg-white p-3 text-sm font-semibold text-rose-400">
-                        Nothing planned for this meal yet.
+                        {t.mealPlan.nothingPlannedMeal}
                       </p>
                     ) : (
                       items.map((item) => {
@@ -527,8 +536,8 @@ export default function MealPlanPage() {
 
                     {items.length > 0 && (
                       <div className="rounded-xl bg-white p-3 text-sm font-black text-rose-700">
-                        Total: {Math.round(totals.calories)} kcal ·{" "}
-                        {totals.protein.toFixed(1)}g protein ·{" "}
+                        {t.common.total}: {Math.round(totals.calories)} kcal ·{" "}
+                        {totals.protein.toFixed(1)}g {t.common.protein} ·{" "}
                         {totals.cost.toFixed(2)} €
                       </div>
                     )}
@@ -550,10 +559,10 @@ export default function MealPlanPage() {
 
         <div className="text-center">
           <p className="text-xs font-bold uppercase tracking-[0.25em] text-pink-400 sm:hidden">
-            day
+            {t.mealPlan.day}
           </p>
           <p className="hidden text-xs font-bold uppercase tracking-[0.25em] text-pink-400 sm:block">
-            week
+            {t.mealPlan.week}
           </p>
           <p className="mt-1 text-sm font-black text-rose-950 sm:hidden">
             {selectedDayLabel}
@@ -585,7 +594,7 @@ export default function MealPlanPage() {
           >
             <p className="text-sm font-black">{day.shortLabel}</p>
             <p className="mt-1 text-xs font-semibold opacity-80">
-              {planItems.filter((item) => item.date === day.date).length} items
+              {planItems.filter((item) => item.date === day.date).length} {t.mealPlan.items}
             </p>
           </button>
         ))}
@@ -593,29 +602,29 @@ export default function MealPlanPage() {
 
       <section className="mt-8 rounded-[2rem] border border-pink-100 bg-white p-5 shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-6">
         <h2 className="text-2xl font-black text-pink-500 sm:text-3xl">
-          Add to plan ♡
+          {t.mealPlan.addToPlan}
         </h2>
 
         <p className="mt-2 text-sm font-semibold text-rose-500">
-          Adding to: {selectedDayLabel}
+          {t.mealPlan.addingTo} {selectedDayLabel}
         </p>
 
         {!hasHousehold ? (
           <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
             <p className="text-lg font-black text-pink-500">
-              No household yet ♡
+              {t.common.noHouseholdYet}
             </p>
             <p className="mt-2 font-semibold text-rose-500">
-              Join or create a household first to plan meals together.
+              {t.mealPlan.joinHouseholdFirst}
             </p>
           </div>
         ) : !hasPlannerOptions ? (
           <div className="mt-5 rounded-2xl bg-pink-50 p-5 text-center">
             <p className="text-lg font-black text-pink-500">
-              Nothing to add yet ♡
+              {t.mealPlan.nothingToAdd}
             </p>
             <p className="mt-2 font-semibold text-rose-500">
-              Add ingredients or recipes first, then you can build your meal plan here.
+              {t.mealPlan.addIngredientsFirst}
             </p>
           </div>
         ) : (
@@ -623,7 +632,7 @@ export default function MealPlanPage() {
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  Meal
+                  {t.mealPlan.meal}
                 </label>
 
                 <select
@@ -632,14 +641,14 @@ export default function MealPlanPage() {
                   className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                 >
                   {mealTypes.map((type) => (
-                    <option key={type}>{type}</option>
+                    <option key={type} value={type}>{mealTypeLabels[type]}</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  Type
+                  {t.common.type}
                 </label>
 
                 <select
@@ -651,14 +660,14 @@ export default function MealPlanPage() {
                   }}
                   className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                 >
-                  <option value="recipe">Recipe</option>
-                  <option value="ingredient">Ingredient</option>
+                  <option value="recipe">{t.common.recipe}</option>
+                  <option value="ingredient">{t.common.ingredient}</option>
                 </select>
               </div>
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  {itemType === "recipe" ? "Recipe" : "Ingredient"}
+                  {itemType === "recipe" ? t.common.recipe : t.common.ingredient}
                 </label>
 
                 <select
@@ -666,7 +675,7 @@ export default function MealPlanPage() {
                   onChange={(event) => setSelectedItemId(event.target.value)}
                   className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                 >
-                  <option value="">Choose item</option>
+                  <option value="">{t.common.chooseItem}</option>
 
                   {availableItems.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -678,7 +687,7 @@ export default function MealPlanPage() {
 
               <div>
                 <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-                  {itemType === "recipe" ? "Servings" : "Amount"}
+                  {itemType === "recipe" ? t.mealPlan.servings : t.common.amount}
                 </label>
 
                 <input
@@ -696,7 +705,7 @@ export default function MealPlanPage() {
               className="mt-6 flex w-full items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-4 text-lg font-black text-white shadow-[0_10px_25px_rgba(244,114,182,0.35)] transition hover:scale-[1.01] hover:bg-pink-600"
             >
               <Plus size={20} strokeWidth={3} />
-              Add meal
+              {t.mealPlan.addMeal}
             </button>
           </>
         )}

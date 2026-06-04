@@ -2,10 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 export default function AuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -66,11 +68,11 @@ export default function AuthGate({ children }: { children: React.ReactNode }) {
           </div>
 
           <p className="mt-6 text-3xl font-black text-pink-500">
-            Loading ♡
+            {t.auth.loadingTitle}
           </p>
 
           <p className="mt-3 font-semibold text-rose-500">
-            Getting your space ready.
+            {t.auth.loadingBody}
           </p>
         </div>
       </main>

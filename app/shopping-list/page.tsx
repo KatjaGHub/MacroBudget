@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 type ShoppingItem = {
@@ -33,6 +34,7 @@ function createChannelSuffix() {
 }
 
 export default function ShoppingListPage() {
+    const { t } = useLanguage();
     const [items, setItems] = useState<ShoppingItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [newItem, setNewItem] = useState("");
@@ -161,7 +163,7 @@ export default function ShoppingListPage() {
         if (!newItem.trim()) return;
 
         if (!householdId) {
-            alert("No household found.");
+            alert(t.common.noHouseholdFound);
             return;
         }
 
@@ -169,7 +171,7 @@ export default function ShoppingListPage() {
         const currentUserId = sessionData.session?.user.id;
 
         if (!currentUserId) {
-            alert("You need to be logged in.");
+            alert(t.common.youNeedLogin);
             return;
         }
 
@@ -195,7 +197,7 @@ export default function ShoppingListPage() {
                 ...(data as Omit<ShoppingItem, "profiles">),
                 profiles: {
                     id: currentUserId,
-                    full_name: "you",
+                    full_name: t.common.you,
                 },
             },
             ...items,
@@ -242,8 +244,8 @@ export default function ShoppingListPage() {
     };
 
     const getAddedByText = (item: ShoppingItem) => {
-        if (item.added_by === userId) return "you";
-        return item.profiles?.full_name ?? "Someone";
+        if (item.added_by === userId) return t.common.you;
+        return item.profiles?.full_name ?? t.common.someone;
     };
 
     const toBuyItems = items.filter((item) => !item.is_checked);
@@ -255,15 +257,15 @@ export default function ShoppingListPage() {
         <main className="mx-auto max-w-2xl px-4 py-4 sm:p-6">
             <section className="pt-10">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    shared list
+                    {t.shoppingList.eyebrow}
                 </p>
 
                 <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
-                    Shopping List ♡
+                    {t.shoppingList.title}
                 </h1>
 
                 <p className="mt-3 text-rose-600">
-                    Minimal grocery list for quick shopping.
+                    {t.shoppingList.intro}
                 </p>
             </section>
 
@@ -275,7 +277,7 @@ export default function ShoppingListPage() {
                         onKeyDown={(event) => {
                             if (event.key === "Enter") addItem();
                         }}
-                        placeholder="Add item..."
+                        placeholder={t.shoppingList.addItem}
                         className="min-w-0 flex-1 rounded-full bg-pink-50 px-5 py-4 text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300"
                     />
 
@@ -285,14 +287,14 @@ export default function ShoppingListPage() {
                         onKeyDown={(event) => {
                             if (event.key === "Enter") addItem();
                         }}
-                        placeholder="Qty"
+                        placeholder={t.shoppingList.quantity}
                         className="w-full rounded-full bg-pink-50 px-4 py-4 text-center text-lg font-semibold text-rose-900 outline-none placeholder:text-rose-300 sm:w-24"
                     />
 
                     <button
                         onClick={addItem}
                         className="rounded-full bg-pink-500 px-5 py-4 text-2xl font-black text-white shadow-sm transition hover:scale-105 hover:bg-pink-600"
-                        aria-label="Add item"
+                        aria-label={t.shoppingList.addItem}
                     >
                         +
                     </button>
@@ -303,37 +305,37 @@ export default function ShoppingListPage() {
                 {loading ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            loading
+                            {t.common.loading}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Loading shopping list ♡
+                            {t.shoppingList.loadingTitle}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Syncing your shared items.
+                            {t.shoppingList.loadingBody}
                         </p>
                     </div>
                 ) : !hasHousehold ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            no household
+                            {t.shoppingList.noHousehold}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Join a household first ♡
+                            {t.shoppingList.joinHouseholdFirst}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Create or join a household before using the shared shopping list.
+                            {t.shoppingList.joinHouseholdBody}
                         </p>
                     </div>
                 ) : !hasAnyItems ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-8 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            list is clear
+                            {t.shoppingList.listClear}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            No shopping items yet ♡
+                            {t.shoppingList.noItems}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Add your first grocery item above to start the shared list.
+                            {t.shoppingList.noItemsBody}
                         </p>
                     </div>
                 ) : (
@@ -347,7 +349,7 @@ export default function ShoppingListPage() {
                                     <button
                                         onClick={() => toggleBought(item)}
                                         className="h-7 w-7 shrink-0 rounded-full border-2 border-pink-300 transition group-hover:border-pink-500"
-                                        aria-label={`Mark ${item.name} as bought`}
+                                        aria-label={`${t.shoppingList.markBought} ${item.name}`}
                                     />
 
                                     <button
@@ -365,14 +367,14 @@ export default function ShoppingListPage() {
                                         )}
 
                                         <p className="text-xs font-bold text-rose-300">
-                                            added by {getAddedByText(item)}
+                                            {t.dashboard.addedBy} {getAddedByText(item)}
                                         </p>
                                     </button>
 
                                     <button
                                         onClick={() => deleteItem(item.id)}
                                         className="shrink-0 rounded-full p-2 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
-                                        aria-label={`Delete ${item.name}`}
+                                        aria-label={`${t.shoppingList.delete} ${item.name}`}
                                     >
                                         <Trash2 size={18} />
                                     </button>
@@ -383,7 +385,7 @@ export default function ShoppingListPage() {
                         {boughtItems.length > 0 && (
                             <div className="mt-10">
                                 <p className="mb-3 text-sm font-bold uppercase tracking-[0.2em] text-rose-300">
-                                    Bought
+                                    {t.shoppingList.bought}
                                 </p>
 
                                 <div className="space-y-1">
@@ -395,7 +397,7 @@ export default function ShoppingListPage() {
                                             <button
                                                 onClick={() => toggleBought(item)}
                                                 className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-pink-400 text-sm font-bold text-white"
-                                                aria-label={`Mark ${item.name} as not bought`}
+                                                aria-label={`${t.shoppingList.markNotBought} ${item.name}`}
                                             >
                                                 ✓
                                             </button>
@@ -415,14 +417,14 @@ export default function ShoppingListPage() {
                                                 )}
 
                                                 <p className="text-xs font-bold text-rose-300">
-                                                    added by {getAddedByText(item)}
+                                                    {t.dashboard.addedBy} {getAddedByText(item)}
                                                 </p>
                                             </button>
 
                                             <button
                                                 onClick={() => deleteItem(item.id)}
                                                 className="shrink-0 rounded-full p-2 text-rose-300 transition hover:bg-rose-100 hover:text-rose-500 sm:opacity-0 sm:group-hover:opacity-100"
-                                                aria-label={`Delete ${item.name}`}
+                                                aria-label={`${t.shoppingList.delete} ${item.name}`}
                                             >
                                                 <Trash2 size={18} />
                                             </button>

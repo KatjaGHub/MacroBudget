@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 function makeInviteCode() {
@@ -10,6 +11,7 @@ function makeInviteCode() {
 
 export default function LoginPage() {
     const router = useRouter();
+    const { t } = useLanguage();
     const [mode, setMode] = useState<"login" | "register">("login");
     const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
@@ -32,7 +34,7 @@ export default function LoginPage() {
         }
 
         if (!fullName.trim()) {
-            alert("Please enter your name.");
+            alert(t.login.enterName);
             return;
         }
 
@@ -60,7 +62,9 @@ export default function LoginPage() {
             const { data: createdHousehold, error: householdError } = await supabase
                 .from("households")
                 .insert({
-                    name: `${fullName.trim() || "My"} Household`,
+                    name: fullName.trim()
+                        ? `${fullName.trim()} ${t.login.defaultHousehold}`
+                        : t.login.defaultHousehold,
                     invite_code: makeInviteCode(),
                 })
                 .select()
@@ -101,7 +105,7 @@ export default function LoginPage() {
                 </p>
 
                 <h1 className="mt-2 text-4xl font-black text-pink-500">
-                    {mode === "login" ? "Welcome back ♡" : "Create account ♡"}
+                    {mode === "login" ? t.login.welcome : t.login.createAccountTitle}
                 </h1>
 
                 <div className="mt-6 grid grid-cols-2 gap-2 rounded-full bg-pink-50 p-1">
@@ -113,7 +117,7 @@ export default function LoginPage() {
                                 : "text-rose-500"
                             }`}
                     >
-                        Login
+                        {t.login.login}
                     </button>
 
                     <button
@@ -124,7 +128,7 @@ export default function LoginPage() {
                                 : "text-rose-500"
                             }`}
                     >
-                        Register
+                        {t.login.register}
                     </button>
                 </div>
 
@@ -135,7 +139,7 @@ export default function LoginPage() {
                         autoComplete="name"
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
-                        placeholder="Name"
+                        placeholder={t.login.name}
                         className="mt-6 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-pink-500 outline-none placeholder:text-rose-300"
                     />
                 )}
@@ -146,7 +150,7 @@ export default function LoginPage() {
                     autoComplete="email"
                     value={email}
                     onChange={(event) => setEmail(event.target.value)}
-                    placeholder="Email"
+                    placeholder={t.login.email}
                     className={`${mode === "register" ? "mt-4" : "mt-6"
                         } w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-pink-500 outline-none placeholder:text-rose-300`}
                 />
@@ -161,7 +165,7 @@ export default function LoginPage() {
                     }
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Password"
+                    placeholder={t.login.password}
                     className="mt-4 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-pink-500 outline-none placeholder:text-rose-300"
                 />
 
@@ -169,7 +173,7 @@ export default function LoginPage() {
                     type="submit"
                     className="mt-6 w-full rounded-full bg-pink-500 px-6 py-4 font-black text-white transition hover:bg-pink-600"
                 >
-                    {mode === "login" ? "Log in" : "Create account"}
+                    {mode === "login" ? t.login.logIn : t.login.createAccount}
                 </button>
             </form>
         </main>

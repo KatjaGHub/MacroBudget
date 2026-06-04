@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 
 export default function LogoutButton() {
   const router = useRouter();
+  const { t } = useLanguage();
 
   return (
     <button
@@ -14,7 +16,7 @@ export default function LogoutButton() {
       }}
       className="rounded-full px-4 py-2 text-rose-700 hover:bg-pink-100"
     >
-      Logout
+      {t.auth.logout}
     </button>
   );
 }

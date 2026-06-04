@@ -11,10 +11,12 @@ import {
 import { dictionary, isLanguage, type Language } from "@/lib/i18n";
 import { supabase } from "@/lib/supabase";
 
+type Translation = typeof dictionary.en;
+
 type LanguageContextValue = {
   language: Language;
   setLanguage: (language: Language) => Promise<void>;
-  t: (typeof dictionary)[Language];
+  t: Translation;
 };
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -84,7 +86,10 @@ export default function LanguageProvider({ children }: { children: ReactNode }) 
     () => ({
       language,
       setLanguage,
-      t: dictionary[language],
+      t: {
+        ...dictionary.en,
+        ...dictionary[language],
+      } as Translation,
     }),
     [language]
   );

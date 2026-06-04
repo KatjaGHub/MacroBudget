@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Plus, Trash2 } from "lucide-react";
 import ScrollToTop from "@/components/ScrollToTop";
+import { useLanguage } from "@/components/LanguageProvider";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -30,6 +31,8 @@ type Recipe = {
 };
 
 export default function RecipesPage() {
+    const { t } = useLanguage();
+    const noHouseholdFound = t.common.noHouseholdFound;
     const [search, setSearch] = useState("");
     const [loading, setLoading] = useState(true);
     const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -42,7 +45,7 @@ export default function RecipesPage() {
 
             if (!householdId) {
                 setLoading(false);
-                alert("No household found.");
+                alert(noHouseholdFound);
                 return;
             }
 
@@ -81,7 +84,7 @@ export default function RecipesPage() {
         };
 
         fetchRecipes();
-    }, []);
+    }, [noHouseholdFound]);
 
     const recipesWithDetails = recipes.map((recipe) => {
         const totals = recipe.recipe_ingredients.reduce(
@@ -103,7 +106,7 @@ export default function RecipesPage() {
         return {
             ...recipe,
             ingredientNames: recipe.recipe_ingredients.map(
-                (item) => item.ingredients?.name ?? "Unknown ingredient"
+                (item) => item.ingredients?.name ?? t.common.ingredient
             ),
             calories: Math.round(totals.calories / recipe.servings),
             protein: totals.protein / recipe.servings,
@@ -125,7 +128,7 @@ export default function RecipesPage() {
 
     const handleDeleteRecipe = async (recipeId: number, recipeName: string) => {
         const confirmed = window.confirm(
-            `Are you sure you want to delete "${recipeName}"?`
+            `${t.ingredientsPage.deleteConfirm} "${recipeName}"?`
         );
 
         if (!confirmed) return;
@@ -157,22 +160,22 @@ export default function RecipesPage() {
         <main className="mx-auto max-w-6xl px-4 py-4 sm:p-6">
             <section className="rounded-[2rem] border border-pink-100 bg-white/70 p-5 shadow-sm backdrop-blur sm:p-8">
                 <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                    recipe collection
+                    {t.recipesPage.eyebrow}
                 </p>
 
                 <h1 className="mt-2 text-3xl font-black text-pink-500 sm:text-5xl">
-                    Recipes ♡
+                    {t.recipesPage.title}
                 </h1>
 
                 <p className="mt-3 text-rose-700">
-                    Cute recipe cards with calories, protein and cost per serving.
+                    {t.recipesPage.intro}
                 </p>
 
                 <div className="mt-6 grid gap-4 md:grid-cols-[1fr_260px]">
                     <input
                         value={search}
                         onChange={(event) => setSearch(event.target.value)}
-                        placeholder="Search recipes..."
+                        placeholder={t.recipesPage.search}
                         className="w-full rounded-full border border-pink-100 bg-white px-5 py-3 text-rose-900 shadow-sm outline-none placeholder:text-rose-300 focus:border-pink-300"
                     />
 
@@ -181,7 +184,7 @@ export default function RecipesPage() {
                         className="flex h-12 items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                     >
                         <Plus size={20} strokeWidth={3} />
-                        Create recipe
+                        {t.recipesPage.create}
                     </Link>
                 </div>
 
@@ -202,44 +205,44 @@ export default function RecipesPage() {
                 {loading ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            loading
+                            {t.common.loading}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Loading recipes ♡
+                            {t.recipesPage.loadingTitle}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Pulling together your recipe collection.
+                            {t.recipesPage.loadingBody}
                         </p>
                     </div>
                 ) : recipes.length === 0 ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            empty cookbook
+                            {t.recipesPage.emptyEyebrow}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            No recipes yet ♡
+                            {t.recipesPage.emptyTitle}
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Create your first recipe to track serving cost, calories and protein.
+                            {t.recipesPage.emptyBody}
                         </p>
                         <Link
                             href="/create-recipe"
                             className="mt-6 inline-flex items-center justify-center gap-3 rounded-full bg-pink-500 px-6 py-3 text-sm font-bold text-white shadow-[0_10px_25px_rgba(244,114,182,0.3)] transition hover:scale-[1.02] hover:bg-pink-600"
                         >
                             <Plus size={20} strokeWidth={3} />
-                            Create recipe
+                            {t.recipesPage.create}
                         </Link>
                     </div>
                 ) : groupedRecipes.length === 0 ? (
                     <div className="rounded-[2rem] border border-pink-100 bg-white/80 p-5 text-center shadow-[0_10px_30px_rgba(244,114,182,0.12)] sm:p-8">
                         <p className="text-sm font-bold uppercase tracking-[0.25em] text-pink-400">
-                            no matches
+                            {t.recipesPage.noMatches}
                         </p>
                         <p className="mt-2 text-3xl font-black text-pink-500">
-                            Nothing matches “{search}” ♡
+                            {t.recipesPage.nothingMatches} &quot;{search}&quot; ♡
                         </p>
                         <p className="mt-3 font-semibold text-rose-500">
-                            Try another search or create a new recipe.
+                            {t.recipesPage.tryAnother}
                         </p>
                     </div>
                 ) : (
@@ -266,7 +269,7 @@ export default function RecipesPage() {
                                                 </h3>
 
                                                 <p className="mt-1 text-sm font-medium text-rose-500">
-                                                    {recipe.servings} servings
+                                                    {recipe.servings} {t.common.servings}
                                                 </p>
                                             </div>
 
@@ -276,7 +279,7 @@ export default function RecipesPage() {
                                                         handleDeleteRecipe(recipe.id, recipe.name)
                                                     }
                                                     className="flex h-10 w-10 items-center justify-center rounded-full bg-rose-100 text-rose-500 transition hover:bg-rose-200"
-                                                    aria-label={`Delete ${recipe.name}`}
+                                                    aria-label={`${t.ingredientsPage.deleteLabel} ${recipe.name}`}
                                                 >
                                                     <Trash2 size={18} />
                                                 </button>
@@ -285,7 +288,7 @@ export default function RecipesPage() {
                                                     href={`/recipes/${recipe.id}`}
                                                     className="rounded-full bg-pink-500 px-5 py-2 text-sm font-bold text-white shadow-sm hover:bg-pink-600"
                                                 >
-                                                    View ♡
+                                                    {t.recipesPage.view}
                                                 </Link>
                                             </div>
                                         </div>
@@ -293,7 +296,7 @@ export default function RecipesPage() {
                                         <div className="mt-6 grid gap-3 sm:grid-cols-3">
                                             <div className="rounded-2xl bg-pink-50 p-4 text-center">
                                                 <p className="text-xs font-bold uppercase text-pink-400">
-                                                    Cost
+                                                    {t.common.cost}
                                                 </p>
                                                 <p className="mt-1 font-black text-rose-900">
                                                     {recipe.cost.toFixed(2)} €
@@ -302,7 +305,7 @@ export default function RecipesPage() {
 
                                             <div className="rounded-2xl bg-orange-50 p-4 text-center">
                                                 <p className="text-xs font-bold uppercase text-orange-400">
-                                                    Calories
+                                                    {t.common.calories}
                                                 </p>
                                                 <p className="mt-1 font-black text-rose-900">
                                                     {recipe.calories}
@@ -311,7 +314,7 @@ export default function RecipesPage() {
 
                                             <div className="rounded-2xl bg-purple-50 p-4 text-center">
                                                 <p className="text-xs font-bold uppercase text-purple-400">
-                                                    Protein
+                                                    {t.common.protein}
                                                 </p>
                                                 <p className="mt-1 font-black text-rose-900">
                                                     {recipe.protein.toFixed(1)}g
@@ -321,7 +324,7 @@ export default function RecipesPage() {
 
                                         <div className="mt-6 rounded-2xl border border-pink-100 bg-rose-50/50 p-4">
                                             <p className="text-sm font-black text-pink-500">
-                                                Ingredients
+                                                {t.common.ingredients}
                                             </p>
 
                                             <ul className="mt-3 space-y-2 text-sm text-rose-800">

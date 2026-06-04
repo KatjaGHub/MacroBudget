@@ -61,6 +61,7 @@ function applyTheme(theme: ThemeMode) {
 
 export default function SettingsPage() {
     const { language, setLanguage, t } = useLanguage();
+    const dateLocale = language === "sl" ? "sl-SI" : language === "de" ? "de-DE" : "en-US";
     const [loading, setLoading] = useState(true);
     const [theme, setTheme] = useState<ThemeMode>("system");
     const [fullName, setFullName] = useState("");
@@ -221,7 +222,7 @@ export default function SettingsPage() {
             }
         }
 
-        alert("Profile saved ?");
+        alert(t.settings.profileSaved);
     };
 
     const saveTheme = (nextTheme: ThemeMode) => {
@@ -371,7 +372,7 @@ export default function SettingsPage() {
                             onChange={(event) => setBirthDay(event.target.value)}
                             className="rounded-2xl bg-orange-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                         >
-                            <option value="">Day</option>
+                            <option value="">{t.settings.day}</option>
                             {days.map((day) => (
                                 <option key={day} value={day}>
                                     {day}
@@ -384,10 +385,10 @@ export default function SettingsPage() {
                             onChange={(event) => setBirthMonth(event.target.value)}
                             className="rounded-2xl bg-orange-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                         >
-                            <option value="">Month</option>
+                            <option value="">{t.settings.month}</option>
                             {months.map((month) => (
                                 <option key={month.value} value={month.value}>
-                                    {month.label}
+                                    {new Date(2000, Number(month.value) - 1, 1).toLocaleString(dateLocale, { month: "long" })}
                                 </option>
                             ))}
                         </select>
@@ -397,7 +398,7 @@ export default function SettingsPage() {
                             onChange={(event) => setBirthYear(event.target.value)}
                             className="rounded-2xl bg-orange-50 px-5 py-4 font-semibold text-rose-950 outline-none"
                         >
-                            <option value="">Year</option>
+                            <option value="">{t.settings.year}</option>
                             {years.map((year) => (
                                 <option key={year} value={year}>
                                     {year}
@@ -443,7 +444,7 @@ export default function SettingsPage() {
                             step="0.1"
                             value={goalWeight}
                             onChange={(event) => setGoalWeight(event.target.value)}
-                            placeholder="Example: 65"
+                            placeholder={t.settings.exampleGoalWeight}
                             className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                         />
                     </div>
@@ -458,7 +459,7 @@ export default function SettingsPage() {
                             step="0.1"
                             value={goalStartWeight}
                             onChange={(event) => setGoalStartWeight(event.target.value)}
-                            placeholder="Example: 95"
+                            placeholder={t.settings.exampleStartWeight}
                             className="mt-2 w-full rounded-2xl bg-rose-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                         />
                     </div>
@@ -477,9 +478,9 @@ export default function SettingsPage() {
                             : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                             }`}
                     >
-                        <p className="font-black">Calculate for me</p>
+                        <p className="font-black">{t.settings.automaticTarget}</p>
                         <p className="mt-1 text-sm font-semibold opacity-80">
-                            Updates with your latest logged weight
+                            {t.settings.automaticCalorieBody}
                         </p>
                     </button>
 
@@ -491,16 +492,16 @@ export default function SettingsPage() {
                             : "border-pink-100 bg-pink-50 text-rose-700 hover:bg-pink-100"
                             }`}
                     >
-                        <p className="font-black">Manual target</p>
+                        <p className="font-black">{t.settings.manualTargetTitle}</p>
                         <p className="mt-1 text-sm font-semibold opacity-80">
-                            Keep the same daily calorie goal
+                            {t.settings.manualCalorieBody}
                         </p>
                     </button>
                 </div>
 
                 <div className="mt-5">
                     <label className="text-sm font-black uppercase tracking-wide text-pink-400">
-                        Daily calorie target:
+                        {t.settings.dailyCalorieTarget}
                     </label>
 
                     <input
@@ -512,15 +513,15 @@ export default function SettingsPage() {
                         }}
                         placeholder={
                             calorieTargetMode === "auto"
-                                ? "Calculated automatically on dashboard"
-                                : "Example: 1800"
+                                ? t.settings.calculatedAutomatically
+                                : t.settings.exampleCalories
                         }
                         className="mt-2 w-full rounded-2xl bg-pink-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                     />
 
                     {calorieTargetMode === "auto" && (
                         <p className="mt-2 text-sm font-semibold text-rose-400">
-                            Auto mode uses your height, birth date, sex and latest weight log.
+                            {t.settings.automaticCalorieBody}
                         </p>
                     )}
                 </div>
@@ -534,9 +535,9 @@ export default function SettingsPage() {
                                 : "border-purple-100 bg-purple-50 text-rose-700 hover:bg-purple-100"
                             }`}
                     >
-                        <p className="font-black">Calculate protein for me</p>
+                        <p className="font-black">{t.settings.automaticProteinTitle}</p>
                         <p className="mt-1 text-sm font-semibold opacity-80">
-                            Uses your latest weight × 1.6g
+                            {t.settings.automaticProteinBody}
                         </p>
                     </button>
 
@@ -548,16 +549,16 @@ export default function SettingsPage() {
                                 : "border-purple-100 bg-purple-50 text-rose-700 hover:bg-purple-100"
                             }`}
                     >
-                        <p className="font-black">Manual protein target</p>
+                        <p className="font-black">{t.settings.manualProteinTitle}</p>
                         <p className="mt-1 text-sm font-semibold opacity-80">
-                            Keep the same daily protein goal
+                            {t.settings.manualProteinBody}
                         </p>
                     </button>
                 </div>
 
                 <div className="mt-5">
                     <label className="text-sm font-black uppercase tracking-wide text-purple-400">
-                        Protein target in g:
+                        {t.settings.proteinTargetLabel}
                     </label>
 
                     <input
@@ -569,15 +570,15 @@ export default function SettingsPage() {
                         }}
                         placeholder={
                             proteinTargetMode === "auto"
-                                ? "Calculated automatically on dashboard"
-                                : "Example: 120"
+                                ? t.settings.calculatedAutomatically
+                                : t.settings.exampleProtein
                         }
                         className="mt-2 w-full rounded-2xl bg-purple-50 px-5 py-4 font-semibold text-rose-950 outline-none placeholder:text-rose-300"
                     />
 
                     {proteinTargetMode === "auto" && (
                         <p className="mt-2 text-sm font-semibold text-rose-400">
-                            Auto mode uses your latest weight log and calculates 1.6g protein per kg.
+                            {t.settings.automaticProteinHint}
                         </p>
                     )}
                 </div>
