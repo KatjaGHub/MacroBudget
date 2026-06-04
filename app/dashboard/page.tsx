@@ -640,59 +640,59 @@ export default function DashboardPage() {
                 </p>
             </section>
 
-            <section className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                <div className="rounded-[2rem] bg-orange-50 p-5 shadow-sm sm:p-6">
+            <section className="mt-8 grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+                <div className="rounded-[2rem] bg-orange-50 p-4 shadow-sm sm:p-6">
                     <Utensils className="text-orange-400" />
-                    <p className="mt-3 text-sm font-black uppercase text-orange-400">
+                    <p className="mt-3 text-xs font-black uppercase text-orange-400 sm:text-sm">
                         Calories
                     </p>
-                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
+                    <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {Math.round(todayCalories)}
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">
+                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">
                         {hasFitnessProfile
                             ? `of ${activeCalorieTarget || "—"} kcal`
                             : "tracked today"}
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-purple-50 p-5 shadow-sm sm:p-6">
+                <div className="rounded-[2rem] bg-purple-50 p-4 shadow-sm sm:p-6">
                     <Sparkles className="text-purple-400" />
-                    <p className="mt-3 text-sm font-black uppercase text-purple-400">
+                    <p className="mt-3 text-xs font-black uppercase text-purple-400 sm:text-sm">
                         Protein
                     </p>
-                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
+                    <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {todayProtein.toFixed(1)}g
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">
+                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">
                         {hasFitnessProfile
                             ? `of ${activeProteinTarget || "—"}g`
                             : "tracked today"}
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-pink-50 p-5 shadow-sm sm:p-6">
+                <div className="rounded-[2rem] bg-pink-50 p-4 shadow-sm sm:p-6">
                     <LineChart className="text-pink-400" />
-                    <p className="mt-3 text-sm font-black uppercase text-pink-400">
+                    <p className="mt-3 text-xs font-black uppercase text-pink-400 sm:text-sm">
                         Daily cost
                     </p>
-                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
+                    <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {todayCost.toFixed(2)}€
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">
+                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">
                         estimated today
                     </p>
                 </div>
 
-                <div className="rounded-[2rem] bg-rose-50 p-5 shadow-sm sm:p-6">
+                <div className="rounded-[2rem] bg-rose-50 p-4 shadow-sm sm:p-6">
                     <LineChart className="text-rose-400" />
-                    <p className="mt-3 text-sm font-black uppercase text-rose-400">
+                    <p className="mt-3 text-xs font-black uppercase text-rose-400 sm:text-sm">
                         Weekly cost
                     </p>
-                    <p className="mt-2 text-3xl font-black text-rose-950 sm:text-4xl">
+                    <p className="mt-2 text-2xl font-black text-rose-950 sm:text-4xl">
                         {weeklyCost.toFixed(2)}€
                     </p>
-                    <p className="text-sm font-semibold text-rose-500">next 7 days</p>
+                    <p className="text-xs font-semibold text-rose-500 sm:text-sm">next 7 days</p>
                 </div>
             </section>
 
