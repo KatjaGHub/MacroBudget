@@ -76,7 +76,7 @@ export default function RecipesPage() {
                 return;
             }
 
-            setRecipes((data ?? []) as Recipe[]);
+            setRecipes((data ?? []) as unknown as Recipe[]);
             setLoading(false);
         };
 

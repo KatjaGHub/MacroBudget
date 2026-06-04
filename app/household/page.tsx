@@ -48,7 +48,7 @@ export default function HouseholdPage() {
             const existingMembership = existingMemberships?.[0];
 
             if (existingMembership?.households) {
-                setHousehold(existingMembership.households as Household);
+                setHousehold(existingMembership.households as unknown as Household);
                 setLoading(false);
                 return;
             }

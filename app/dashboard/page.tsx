@@ -267,7 +267,7 @@ export default function DashboardPage() {
         }));
 
         const ingredients = (ingredientsData ?? []) as Ingredient[];
-        const recipes = (recipesData ?? []) as Recipe[];
+        const recipes = (recipesData ?? []) as unknown as Recipe[];
         const mealItems = (mealData ?? []) as MealPlanItem[];
 
         const calculateMeal = (meal: MealPlanItem) => {

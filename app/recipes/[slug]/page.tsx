@@ -81,7 +81,7 @@ export default function RecipeDetailsPage({ params }: RecipeDetailsPageProps) {
                 return;
             }
 
-            setRecipe(data as Recipe);
+            setRecipe(data as unknown as Recipe);
         };
 
         fetchRecipe();

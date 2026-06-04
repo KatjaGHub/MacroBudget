@@ -192,7 +192,7 @@ export default function MealPlanPage() {
       }
 
       setIngredients((ingredientsData ?? []) as Ingredient[]);
-      setRecipes((recipesData ?? []) as Recipe[]);
+      setRecipes((recipesData ?? []) as unknown as Recipe[]);
       setPlanItems(
         ((mealPlanData ?? []) as MealPlanRow[]).map((item) => ({
           id: item.id,
