@@ -9,30 +9,31 @@ import {
   ShoppingBag,
   UtensilsCrossed,
 } from "lucide-react";
+import { useLanguage } from "@/components/LanguageProvider";
 
 const navItems = [
   {
     href: "/dashboard",
-    label: "Dashboard",
+    labelKey: "dashboard",
     icon: ChartColumn,
     matches: (pathname: string) =>
       pathname === "/" || pathname.startsWith("/dashboard"),
   },
   {
     href: "/meal-plan",
-    label: "Meal Plan",
+    labelKey: "mealPlan",
     icon: UtensilsCrossed,
     matches: (pathname: string) => pathname.startsWith("/meal-plan"),
   },
   {
     href: "/shopping-list",
-    label: "Shopping",
+    labelKey: "shopping",
     icon: ShoppingBag,
     matches: (pathname: string) => pathname.startsWith("/shopping-list"),
   },
   {
     href: "/ingredients",
-    label: "Ingredients",
+    labelKey: "ingredients",
     icon: Carrot,
     matches: (pathname: string) =>
       pathname.startsWith("/ingredients") ||
@@ -40,21 +41,23 @@ const navItems = [
   },
   {
     href: "/recipes",
-    label: "Recipes",
+    labelKey: "recipes",
     icon: BookOpen,
     matches: (pathname: string) =>
       pathname.startsWith("/recipes") || pathname.startsWith("/create-recipe"),
   },
-];
+] as const;
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const { t } = useLanguage();
 
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-pink-100 bg-white/95 px-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] pt-2 backdrop-blur-md md:hidden dark:border-pink-900/60 dark:bg-[#21131d]/95">
       <div className="mx-auto flex max-w-md items-end justify-between gap-1">
-        {navItems.map(({ href, label, icon: Icon, matches }) => {
+        {navItems.map(({ href, labelKey, icon: Icon, matches }) => {
           const isActive = matches(pathname);
+          const label = t.nav[labelKey];
 
           return (
             <Link
