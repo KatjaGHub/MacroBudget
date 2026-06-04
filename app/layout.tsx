@@ -20,6 +20,19 @@ export const metadata: Metadata = {
   title: "MacroBudget",
   description: "Plan meals, track macros, and manage household groceries.",
   applicationName: "MacroBudget",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    title: "MacroBudget",
+    statusBarStyle: "default",
+  },
+  formatDetection: {
+    telephone: false,
+    date: false,
+    address: false,
+    email: false,
+    url: false,
+  },
 };
 
 export const viewport: Viewport = {
