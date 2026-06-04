@@ -1,89 +1,117 @@
-# MacroBudget
+# MacroBudget ♡
 
-MacroBudget is a cozy meal planning and food budgeting app for people who want to track nutrition, groceries, recipes, household planning, and weight progress in one clean place.
+**A cozy food budgeting and macro tracking app for meals, groceries, recipes, goals, and shared households.**
 
-It started from a simple idea: MyFitnessPal-style macro tracking, but with real grocery costs, shared household planning, and a softer, friendlier interface.
+MacroBudget is for the tiny daily question that somehow becomes a whole spreadsheet:
 
-## What It Does
+> What are we eating, what does it cost, and is it helping my goals?
 
-MacroBudget helps you answer the daily food questions without opening five different apps:
+It keeps meal planning, nutrition, grocery costs, shopping, and weight progress in one soft pink place. Cute enough to enjoy opening, practical enough to use every day.
 
-- What am I eating today?
-- How many calories and grams of protein am I getting?
-- How much does this meal or week of food cost?
-- What do we need to buy?
-- Am I moving toward my weight goal?
+---
 
-## Features
+## 🌸 The Vibe
 
-### Account And Household
+MacroBudget is built to feel:
 
-- Email authentication with Supabase
-- Shared households
-- Household invite codes
-- Shared ingredients, recipes, meal plans, shopping list, and weight graph
+- cute but clean
+- soft, pink, and friendly
+- useful on a phone
+- calm instead of spreadsheet-heavy
+- made for real meals, real groceries, and real life
 
-### Ingredients
+No overwhelming dashboards. No budget chaos. Just food planning that feels a little more doable.
 
-- Ingredient database per household
-- Calories, protein, unit, package size, and package price
-- Automatic cost calculation per 100g or per piece
-- Searchable ingredient list
+---
 
-### Recipes
+## ✨ What You Can Do
 
-- Recipe builder from saved ingredients
-- Calories, protein, and cost per serving
-- Recipe detail pages
-- Instructions support
-- Searchable recipe collection
+### 🏡 Account + Household
 
-### Meal Planning
+- Sign in with Supabase auth
+- Create or join a household
+- Share ingredients, recipes, meal plans, shopping, and progress
+- Use invite codes to connect with your partner or household
+
+### 🥗 Ingredients
+
+- Save ingredients with calories, protein, unit, package size, and price
+- Calculate cost per `100g` or per piece
+- Search your ingredient database
+- Keep grocery data tied to your household
+
+### 🍳 Recipes
+
+- Build recipes from saved ingredients
+- See calories, protein, and cost per serving
+- Add cooking instructions
+- Browse and search your recipe collection
+
+### 🗓️ Meal Planning
 
 - Plan breakfast, lunch, dinner, and snacks
-- Add recipes or individual ingredients
-- Daily totals for calories, protein, and cost
-- Weekly planning view
+- Add full recipes or individual ingredients
+- View daily totals for calories, protein, and cost
+- Plan across the week without duplicating pages or flows
 
-### Shopping List
+### 🛒 Shopping List
 
-- Shared household shopping list
-- Optional quantities
+- Shared grocery list for the household
+- Add optional quantities
 - Mark items as bought
-- Realtime sync-ready structure through Supabase
+- Keep shopping simple and synced around the household model
 
-### Health And Goals
+### 🌷 Health + Goals
 
-- Weight logging
-- Household weight progress graph
-- BMI calculation
-- Recommended calories
-- Recommended protein
-- Manual calorie and protein targets
-- Goal weight tracking
-- Remaining kg and goal progress
-- Achievement-style progress messages
+- Log daily weight
+- View household weight progress
+- Calculate BMI
+- Get recommended calories
+- Get recommended protein
+- Set manual calorie and protein targets
+- Track goal weight progress
+- See remaining kg and achievement-style progress messages
 
-### App Experience
+### 🌙 App Experience
 
-- Mobile-friendly responsive layouts
+- Mobile-friendly responsive UI
 - Bottom navigation on mobile
-- Desktop navigation preserved
-- PWA metadata and install support
+- Desktop navbar stays clean
+- PWA install support
 - Light, dark, and system theme modes
-- English, Slovenian, and German UI language support
+- English, Slovenian, and German UI
 - Language preference saved to Supabase
 
-## Tech Stack
+---
 
-- Next.js App Router
-- React
-- TypeScript
-- Tailwind CSS
-- Supabase
-- Lucide React
+## 🧁 Why MacroBudget Exists
 
-## Getting Started
+Most food apps track calories.
+
+Most budgeting tools track money.
+
+MacroBudget tries to sit in the sweet little middle:
+
+```text
+meal planning + macro tracking + grocery cost awareness + household sharing
+```
+
+So you can plan food that fits your body, your wallet, and your week.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Next.js App Router**
+- **React**
+- **TypeScript**
+- **Tailwind CSS**
+- **Supabase**
+- **Lucide React**
+
+---
+
+## 🚀 Getting Started
 
 Install dependencies:
 
@@ -103,16 +131,20 @@ Open the app:
 http://localhost:3000
 ```
 
-## Environment Variables
+---
 
-Create a `.env.local` file with your Supabase project values:
+## 🔐 Environment Variables
+
+Create a `.env.local` file:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-## Useful Commands
+---
+
+## 🧪 Useful Commands
 
 Run linting:
 
@@ -132,37 +164,66 @@ Start the production server:
 npm run start
 ```
 
-## Project Status
+---
 
-MacroBudget is actively being built and polished. The core app is functional: auth, households, ingredients, recipes, meal planning, shopping, weight tracking, goal tracking, dark mode, localization, and PWA support are already in place.
+## 📌 Current Status
 
-The current focus is quality: mobile usability, smoother flows, better UI consistency, and small production-ready fixes.
+MacroBudget is actively being built and polished.
 
-## Roadmap
+Already working:
+
+- auth
+- households
+- ingredients
+- recipes
+- meal planning
+- shopping list
+- weight logging
+- BMI
+- calorie and protein recommendations
+- calorie and protein targets
+- goal weight tracking
+- dark mode
+- localization
+- PWA support
+- mobile navigation
+
+Current focus:
+
+- mobile polish
+- UI consistency
+- small production-quality fixes
+- making the app feel nicer to use every day
+
+---
+
+## 🗺️ Roadmap
 
 Planned or possible future improvements:
 
-- More mobile polish
-- Better goal weight insights
-- More detailed nutrition tracking
-- Improved household collaboration
-- Optional reminder architecture
-- AI-assisted meal, shopping, and recipe suggestions
+- 📱 more mobile usability polish
+- 🌷 better goal weight insights
+- 🥦 more detailed nutrition tracking
+- 🏡 smoother household collaboration
+- 🤖 optional AI meal, recipe, and shopping suggestions later
 
-Push notifications and AI features are intentionally not part of the current core app.
+Not currently planned:
 
-## Design Direction
+- push notifications
+- notification reminders
 
-MacroBudget is meant to feel:
+---
 
-- cute but clean
-- soft and friendly
-- practical for daily use
-- mobile-first where it matters
-- calm instead of spreadsheet-heavy
+## 💖 Design Direction
 
-The pink/rose visual identity is part of the product, not just decoration.
+MacroBudget is intentionally soft and friendly.
 
-## Author
+The pink/rose branding is part of the product feeling: gentle, warm, and a little cute, while still being clean enough for daily tracking.
 
-Made to make meal planning, weight goals, and food budgeting feel a little less chaotic and a lot more doable.
+The goal is not to make food tracking feel like homework. The goal is to make it feel manageable.
+
+---
+
+## 🩷 Author
+
+Made to make meal planning, weight goals, and food budgeting feel less chaotic and more like something you can actually keep doing.
