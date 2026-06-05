@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Link from "next/link";
-import { Settings } from "lucide-react";
-import AuthGate from "@/components/AuthGate";
-import DesktopNav from "@/components/DesktopNav";
+import AppShell from "@/components/AppShell";
 import LanguageProvider from "@/components/LanguageProvider";
-import MobileBottomNav from "@/components/MobileBottomNav";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -80,34 +76,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-pink-50 pb-24 text-rose-950 md:pb-0 dark:bg-[#120912] dark:text-pink-50">
+      <body className="min-h-full bg-pink-50 text-rose-950 dark:bg-[#120912] dark:text-pink-50">
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
         <LanguageProvider>
-          <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,#ffe4ef,transparent_35%),radial-gradient(circle_at_top_right,#f3e8ff,transparent_30%),linear-gradient(#fff7fb,#fff)] dark:bg-[radial-gradient(circle_at_top_left,rgba(236,72,153,0.18),transparent_34%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.14),transparent_30%),linear-gradient(#160b14,#120912)]">
-            <nav className="sticky top-0 z-50 border-b border-pink-100 bg-white/70 backdrop-blur-md dark:border-pink-900/60 dark:bg-[#21131d]/80">
-              <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 p-4">
-                <Link
-                  href="/dashboard"
-                  className="text-xl font-black text-pink-500 drop-shadow-sm sm:text-2xl"
-                >
-                  MacroBudget ♡
-                </Link>
-
-                <DesktopNav />
-
-                <Link
-                  href="/settings"
-                  className="flex h-11 w-11 items-center justify-center rounded-full text-rose-700 transition hover:bg-pink-100 md:hidden"
-                  aria-label="Settings"
-                >
-                  <Settings size={22} />
-                </Link>
-              </div>
-            </nav>
-
-            <AuthGate>{children}</AuthGate>
-            <MobileBottomNav />
-          </div>
+          <AppShell>{children}</AppShell>
         </LanguageProvider>
       </body>
     </html>
