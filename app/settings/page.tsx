@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import LogoutButton from "@/components/LogoutButton";
+import ShoppingLinkCard from "@/components/ShoppingLinkCard";
 import { Home, LogOut } from "lucide-react";
 import { useLanguage } from "@/components/LanguageProvider";
 import { getHouseholdId } from "@/lib/getHouseholdId";
@@ -590,6 +591,8 @@ export default function SettingsPage() {
                     {t.settings.saveProfile}
                 </button>
             </section>
+
+            <ShoppingLinkCard />
 
             <section className="mt-8 space-y-4">
                 <Link
