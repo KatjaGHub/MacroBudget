@@ -80,6 +80,16 @@ function buildHomeWidget({ items, error }) {
   }
 
   widget.addSpacer();
+
+  // Shows when iOS last refreshed the widget, so a stale list is easy to spot.
+  const time = new DateFormatter();
+  time.useNoDateStyle();
+  time.useShortTimeStyle();
+  const updated = widget.addText(`↻ ${time.string(new Date())}`);
+  updated.font = Font.mediumSystemFont(9);
+  updated.textColor = Color.gray();
+  updated.rightAlignText();
+
   return widget;
 }
 
@@ -127,7 +137,9 @@ const widget = family.startsWith("accessory")
 if (url.includes("/api/shopping/")) {
   widget.url = url.split("/api/shopping/")[0] + "/shopping-list";
 }
-widget.refreshAfterDate = new Date(Date.now() + 15 * 60 * 1000);
+// Ask iOS to refresh again in 5 minutes. iOS decides the real timing and
+// usually refreshes every 5–15 minutes, depending on how often you look at it.
+widget.refreshAfterDate = new Date(Date.now() + 5 * 60 * 1000);
 
 if (config.runsInWidget) {
   Script.setWidget(widget);
