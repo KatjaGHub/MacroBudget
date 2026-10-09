@@ -4,13 +4,17 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
-import NutritionScanCard, { type NutritionScanResult } from "@/components/NutritionScanCard";
+import NutritionScanCard, {
+  NutritionScanButton,
+  type NutritionScanResult,
+} from "@/components/NutritionScanCard";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
 export default function CreateIngredientPage() {
   const { t } = useLanguage();
   const [name, setName] = useState("");
+  const [scanOpen, setScanOpen] = useState(false);
   const [emoji, setEmoji] = useState("🍗");
   const ingredientTypes = [
     { emoji: "🍗", label: t.createIngredient.proteinType },
@@ -75,12 +79,20 @@ export default function CreateIngredientPage() {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="rounded-[2rem] border border-pink-100 bg-white/85 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-          <NutritionScanCard onResult={applyScan} />
+          {scanOpen && (
+            <div className="mb-6">
+              <NutritionScanCard onResult={applyScan} onClose={() => setScanOpen(false)} />
+            </div>
+          )}
 
-          <div className="mt-6">
-            <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
-              {t.createIngredient.ingredientName}
-            </label>
+          <div>
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
+                {t.createIngredient.ingredientName}
+              </label>
+
+              {!scanOpen && <NutritionScanButton onClick={() => setScanOpen(true)} />}
+            </div>
 
             <input
               value={name}

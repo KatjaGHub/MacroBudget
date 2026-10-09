@@ -103,10 +103,29 @@ function PhotoSlot({
     );
 }
 
+export function NutritionScanButton({ onClick }: { onClick: () => void }) {
+    const { t } = useLanguage();
+
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            title={t.createIngredient.scanTitle}
+            aria-label={t.createIngredient.scanTitle}
+            className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-purple-100 text-purple-500 shadow-sm transition hover:scale-105 hover:bg-purple-200"
+        >
+            <Camera size={20} />
+            <Sparkles size={12} className="absolute -right-0.5 -top-0.5 text-pink-500" />
+        </button>
+    );
+}
+
 export default function NutritionScanCard({
     onResult,
+    onClose,
 }: {
     onResult: (result: NutritionScanResult) => void;
+    onClose: () => void;
 }) {
     const { t } = useLanguage();
     const [labelPhoto, setLabelPhoto] = useState<Photo | null>(null);
@@ -160,12 +179,12 @@ export default function NutritionScanCard({
 
     return (
         <div className="rounded-[2rem] border border-purple-100 bg-purple-50/60 p-5">
-            <div className="flex items-center gap-3">
+            <div className="flex items-start gap-3">
                 <div className="rounded-full bg-purple-100 p-3 text-purple-500">
                     <Camera size={22} />
                 </div>
 
-                <div>
+                <div className="flex-1">
                     <h2 className="text-xl font-black text-purple-500">
                         {t.createIngredient.scanTitle}
                     </h2>
@@ -173,6 +192,15 @@ export default function NutritionScanCard({
                         {t.createIngredient.scanBody}
                     </p>
                 </div>
+
+                <button
+                    type="button"
+                    onClick={onClose}
+                    className="rounded-full p-2 text-rose-400 transition hover:bg-purple-100"
+                    aria-label={t.createIngredient.scanClose}
+                >
+                    <X size={20} />
+                </button>
             </div>
 
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
