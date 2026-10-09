@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useLanguage } from "@/components/LanguageProvider";
+import NutritionScanCard, { type NutritionScanResult } from "@/components/NutritionScanCard";
 import { supabase } from "@/lib/supabase";
 import { getHouseholdId } from "@/lib/getHouseholdId";
 
@@ -38,6 +39,15 @@ export default function CreateIngredientPage() {
     return price / amount;
   }, [packageAmount, packagePrice, unit]);
 
+  const applyScan = (result: NutritionScanResult) => {
+    if (result.name) setName(result.name);
+    setEmoji(result.emoji);
+    setUnit(result.unit);
+    setCalories(result.calories ? String(result.calories) : "");
+    setProtein(result.protein ? String(result.protein) : "");
+    setPackageAmount(result.package_amount ? String(result.package_amount) : "");
+    setPackagePrice(result.package_price ? String(result.package_price) : "");
+  };
 
   return (
     <main className="mx-auto max-w-6xl p-6">
@@ -65,7 +75,9 @@ export default function CreateIngredientPage() {
 
       <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_360px]">
         <div className="rounded-[2rem] border border-pink-100 bg-white/85 p-6 shadow-[0_10px_30px_rgba(244,114,182,0.12)]">
-          <div>
+          <NutritionScanCard onResult={applyScan} />
+
+          <div className="mt-6">
             <label className="text-sm font-bold uppercase tracking-wide text-pink-400">
               {t.createIngredient.ingredientName}
             </label>
